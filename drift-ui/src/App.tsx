@@ -1,26 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronUp, Columns2, List, RotateCcw, Square } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { api } from './api';
 import type { Claims, DriftListItem, Graph, ScanReport } from './types';
 import { DriftList, visibleDrifts, type ListTab } from './components/DriftList';
 import { DriftView } from './components/DriftView';
 import { Matches } from './components/Matches';
 import { ScanStatus } from './components/ScanStatus';
+import { DEFAULT_SPLIT, DETAIL_ONLY, LIST_ONLY, SplitPane, type Frac } from './components/SplitPane';
 import { SystemMap } from './components/SystemMap';
 import { Assistant } from './components/Assistant';
 import { Spinner, isActive } from './components/ui';
 
 type View = 'drift' | 'map' | 'assistant';
-type Mode = 'list' | 'split' | 'focus';
-
-const MODES: { id: Mode; label: string; Icon: typeof List }[] = [
-  { id: 'list', label: 'List', Icon: List },
-  { id: 'split', label: 'Split', Icon: Columns2 },
-  { id: 'focus', label: 'Focus', Icon: Square },
-];
-const loadMode = (): Mode => {
-  try { const m = localStorage.getItem('drift-mode'); if (m === 'list' || m === 'split' || m === 'focus') return m; } catch { /* storage unavailable */ }
-  return 'split';
+const loadFrac = (): Frac => {
+  try { const f = parseFloat(localStorage.getItem('drift-split') ?? ''); if (f >= 0 && f <= 1) return f; } catch { /* storage unavailable */ }
+  return DEFAULT_SPLIT;
 };
 
 export default function App() {
@@ -35,18 +29,23 @@ export default function App() {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
-  const [mode, setModeState] = useState<Mode>(loadMode);
-  const [backTo, setBackTo] = useState<Mode>('list');
-  const setMode = (m: Mode) => { setModeState(m); try { localStorage.setItem('drift-mode', m); } catch { /* ignore */ } };
+  const [frac, setFracState] = useState<Frac>(loadFrac);
+  const [restore, setRestore] = useState<Frac>(() => { const f = loadFrac(); return f > 0 ? f : DEFAULT_SPLIT; });
+  const setFrac = (f: Frac) => {
+    setFracState(f);
+    if (f > 0) setRestore(f);
+    try { localStorage.setItem('drift-split', String(f)); } catch { /* ignore */ }
+  };
+  const mode = frac >= LIST_ONLY ? 'list' : frac <= DETAIL_ONLY ? 'focus' : 'split';
   const order = useMemo(() => (items ? visibleDrifts(items, tab) : []), [items, tab]);
   const pos = selected ? order.findIndex((i) => i.id === selected) : -1;
   const step = useCallback((d: number) => { if (pos >= 0 && order[pos + d]) setSelected(order[pos + d].id); }, [order, pos]);
-  /** List rows open the issue page (GitHub style); split rows just select. */
+  /** In list-only mode a row opens the issue full-page (GitHub style); in split it just selects. */
   const pick = (id: string) => {
     setSelected(id);
-    if (mode === 'list') { setBackTo('list'); setModeState('focus'); }
+    if (mode === 'list') setFrac(DETAIL_ONLY);
   };
-  const leaveFocus = () => setModeState(backTo === 'focus' ? 'list' : backTo);
+  const leaveFocus = () => setFrac(restore);
 
   useEffect(() => {
     if (view !== 'drift' || mode === 'list') return;
@@ -81,7 +80,7 @@ export default function App() {
   const openDrift = (id: string) => {
     const it = items?.find((i) => i.id === id);
     if (it) setTab(it.state === 'open' ? 'decide' : isActive(it.state) ? 'progress' : 'closed');
-    setSelected(id); setView('drift'); if (mode === 'list') setModeState('split');
+    setSelected(id); setView('drift'); if (mode === 'list') setFrac(DEFAULT_SPLIT);
   };
 
   return (
@@ -106,17 +105,6 @@ export default function App() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          {view === 'drift' && (
-            <div role="group" aria-label="Layout" className="flex rounded-md border border-line p-0.5 text-[12.5px]">
-              {MODES.map(({ id, label, Icon }) => (
-                <button key={id} aria-pressed={mode === id} title={`${label} view`}
-                  onClick={() => { if (id === 'focus') setBackTo(mode); setMode(id); }}
-                  className={`flex items-center gap-1.5 rounded px-2 py-1 ${mode === id ? 'bg-sunken text-ink' : 'text-muted hover:text-ink'}`}>
-                  <Icon size={13} />{label}
-                </button>
-              ))}
-            </div>
-          )}
           <ScanStatus report={report} scanning={scanning} onScan={() => scan(api.scan)} />
           <button className="btn btn-ghost" title="Restore the mock codebase and clear decisions" onClick={() => { setSelected(null); scan(api.reset); }}>
             <RotateCcw size={14} />Reset
@@ -130,36 +118,29 @@ export default function App() {
         {!items ? (
           <div className="grid h-full place-items-center">{error ? null : <Spinner label="Scanning acme-shop…" />}</div>
         ) : view === 'drift' ? (
-          mode === 'list' ? (
-            <div className="h-full overflow-y-auto">
-              <DriftList dense items={items} selectedId={selected} onSelect={pick} tab={tab}
-                onTab={(t) => { setTab(t); if (t === 'matches') setSelected(null); }} verifiedCount={claims?.verified.length ?? 0} />
-              {tab === 'matches' && <Matches claims={claims} />}
-            </div>
-          ) : mode === 'focus' ? (
-            <div className="flex h-full min-h-0 flex-col">
-              <div className="flex items-center gap-3 border-b border-line bg-panel px-5 py-2 text-[13px]">
-                <button className="flex items-center gap-1.5 text-muted hover:text-ink" onClick={leaveFocus}><ArrowLeft size={14} />All drifts</button>
-                <span className="ml-auto tabular-nums text-muted">{pos >= 0 ? `${pos + 1} of ${order.length}` : ''}</span>
-                <button className="btn btn-ghost px-1.5" aria-label="Previous drift" title="Previous (k)" disabled={pos <= 0} onClick={() => step(-1)}><ChevronUp size={14} /></button>
-                <button className="btn btn-ghost px-1.5" aria-label="Next drift" title="Next (j)" disabled={pos < 0 || pos >= order.length - 1} onClick={() => step(1)}><ChevronDown size={14} /></button>
+          <SplitPane frac={frac} onFrac={setFrac}
+            left={(wide) => (
+              <>
+                <DriftList dense={wide} items={items} selectedId={selected} onSelect={pick} tab={tab}
+                  onTab={(t) => { setTab(t); if (t === 'matches') setSelected(null); }} verifiedCount={claims?.verified.length ?? 0} />
+                {mode === 'list' && tab === 'matches' && <Matches claims={claims} />}
+              </>
+            )}
+            right={
+              <div className="flex min-h-full flex-col">
+                {mode === 'focus' && (
+                  <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-panel px-5 py-2 text-[13px]">
+                    <button className="flex items-center gap-1.5 text-muted hover:text-ink" onClick={leaveFocus}><ArrowLeft size={14} />All drifts</button>
+                    <span className="ml-auto tabular-nums text-muted">{pos >= 0 ? `${pos + 1} of ${order.length}` : ''}</span>
+                    <button className="btn btn-ghost px-1.5" aria-label="Previous drift" title="Previous (k)" disabled={pos <= 0} onClick={() => step(-1)}><ChevronUp size={14} /></button>
+                    <button className="btn btn-ghost px-1.5" aria-label="Next drift" title="Next (j)" disabled={pos < 0 || pos >= order.length - 1} onClick={() => step(1)}><ChevronDown size={14} /></button>
+                  </div>
+                )}
+                {tab === 'matches' ? <Matches claims={claims} />
+                  : selected ? <DriftView key={`${selected}-${version}`} id={selected} onChanged={refresh} onShowOnMap={(n) => { setFocus(n); setView('map'); }} onAsk={() => setView('assistant')} />
+                  : <div className="grid h-full min-h-[240px] place-items-center text-muted">Select a drift</div>}
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                {tab === 'matches' ? <Matches claims={claims} /> : selected ? <DriftView key={`${selected}-${version}`} id={selected} onChanged={refresh} onShowOnMap={(n) => { setFocus(n); setView('map'); }} onAsk={() => setView('assistant')} />
-                : <div className="grid h-full place-items-center text-muted">Select a drift</div>}
-              </div>
-            </div>
-          ) : (
-          <div className="grid h-full min-h-0 grid-cols-[360px_minmax(0,1fr)]">
-            <DriftList items={items} selectedId={selected} onSelect={pick} tab={tab}
-              onTab={(t) => { setTab(t); if (t === 'matches') setSelected(null); }} verifiedCount={claims?.verified.length ?? 0} />
-            <div className="min-h-0 overflow-y-auto">
-              {tab === 'matches' ? <Matches claims={claims} />
-                : selected ? <DriftView key={`${selected}-${version}`} id={selected} onChanged={refresh} onShowOnMap={(n) => { setFocus(n); setView('map'); }} onAsk={() => setView('assistant')} />
-                : <div className="grid h-full place-items-center text-muted">Select a drift</div>}
-            </div>
-          </div>
-          )
+            } />
         ) : view === 'map' && graph ? (
           <SystemMap graph={graph} drifts={items} focus={focus} onOpenDrift={openDrift} />
         ) : (

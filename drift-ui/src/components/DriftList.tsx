@@ -42,7 +42,7 @@ export function DriftList({
   const critical = groups.decide.filter((i) => i.severity === 'critical').length;
 
   return (
-    <div className={`flex min-h-0 flex-col bg-panel ${dense ? '' : 'h-full border-r border-line'}`}>
+    <div className={`flex min-h-full flex-col bg-panel`}>
       {/* Level 0 summary: one sentence */}
       <div className="px-5 pb-3 pt-5">
         <h1 className="font-display text-[22px] font-semibold leading-tight">
@@ -62,7 +62,7 @@ export function DriftList({
         ))}
       </div>
 
-      <div className={dense ? 'pb-4' : 'flex-1 overflow-y-auto pb-4'}>
+      <div className="flex-1 pb-4">
         {tab !== 'matches' && shown.length === 0 && (
           <div className="flex flex-col items-center gap-2 px-6 py-16 text-center text-muted">
             <Check size={20} className="text-ok" />

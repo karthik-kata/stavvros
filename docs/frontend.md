@@ -21,15 +21,15 @@ React 18 + TypeScript + Vite 5 + Tailwind 3 + Cytoscape 3 + lucide-react. Dev se
 
 ## Layout modes
 
-A List | Split | Focus switch in the top bar (Drift view only; saved in localStorage as `drift-mode`).
+One draggable divider (`components/SplitPane.tsx`) between the list and the detail. Where you drop it picks the mode; it snaps within 150px of either edge. Position is saved in localStorage as `drift-split` (fraction of the width).
 
-| Mode | Layout |
-| --- | --- |
-| List | Full-width table (`DriftList dense`): severity bar, title, service, doc, state. Clicking a row opens Focus, like a GitHub issue |
-| Split | 360px list beside the detail (the original layout) |
-| Focus | Detail only, with "← All drifts" (or `Esc`), `n of m`, and prev/next (`k` / `j`). Prev/next follow `visibleDrifts()` order |
+| Divider at | Mode | Layout |
+| --- | --- | --- |
+| Far right | List | Full-width table (`DriftList dense`): severity bar, title, service, doc, state. Clicking a row opens Focus, like a GitHub issue |
+| Middle | Split | Narrow list beside the detail. List rows turn into the table once the list is wider than 640px |
+| Far left | Focus | Detail only, with "← All drifts" (returns to the previous width, or `Esc`), `n of m`, and prev/next (`k` / `j`) |
 
-The tabs (To decide / In progress / Closed / Matches) apply in every mode. The mode only changes layout.
+Double-click the divider to toggle Split and List. With the divider focused, Left/Right arrows step Focus ← Split → List. The tabs apply in every mode.
 
 ## Information hierarchy
 
