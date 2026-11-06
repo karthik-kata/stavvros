@@ -25,8 +25,8 @@ One draggable divider (`components/SplitPane.tsx`) between the list and the deta
 
 | Divider at | Mode | Layout |
 | --- | --- | --- |
-| Far right | List | Full-width table (`DriftList dense`): severity bar, title, service, doc, state. Clicking a row opens Focus, like a GitHub issue |
-| Middle | Split | Narrow list beside the detail. List rows turn into the table once the list is wider than 640px |
+| Far right | List | Full-width table: severity bar, title, service, doc, state. Clicking a row opens Focus, like a GitHub issue |
+| Middle | Split | Narrow list beside the detail. List rows morph continuously from sidebar rows into table rows between 520 and 740px (the muted line collapses while service / doc / state columns grow in; `DriftList` measures its own width) |
 | Far left | Focus | Detail only, with "← All drifts" (returns to the previous width, or `Esc`), `n of m`, and prev/next (`k` / `j`) |
 
 Double-click the divider to toggle Split and List. With the divider focused, Left/Right arrows step Focus ← Split → List. The tabs apply in every mode.

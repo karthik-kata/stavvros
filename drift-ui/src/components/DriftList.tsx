@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import type { DriftListItem, Severity } from '../types';
 import { SEV_BAR, SEV_LABEL, SEV_TEXT, STATE_LABEL, isActive } from './ui';
@@ -15,7 +15,7 @@ export function visibleDrifts(items: DriftListItem[], tab: ListTab): DriftListIt
 }
 
 export function DriftList({
-  items, selectedId, onSelect, tab, onTab, verifiedCount, dense = false,
+  items, selectedId, onSelect, tab, onTab, verifiedCount,
 }: {
   items: DriftListItem[];
   selectedId: string | null;
@@ -23,9 +23,18 @@ export function DriftList({
   tab: ListTab;
   onTab: (t: ListTab) => void;
   verifiedCount: number;
-  /** List mode: full-width table rows instead of the narrow sidebar rows. */
-  dense?: boolean;
 }) {
+  // Rows morph continuously with the pane width: t=0 is the sidebar row (title + muted line),
+  // t=1 is the table row (title + service / doc / state columns). Measured, so it also follows the snap animation.
+  const root = useRef<HTMLDivElement>(null);
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    if (!root.current) return;
+    const ro = new ResizeObserver(([e]) => setT(Math.min(1, Math.max(0, (e.contentRect.width - 520) / 220))));
+    ro.observe(root.current);
+    return () => ro.disconnect();
+  }, []);
+
   const groups = useMemo(() => ({
     decide: items.filter((i) => i.state === 'open'),
     progress: items.filter((i) => i.state !== 'open' && isActive(i.state)),
@@ -80,31 +89,25 @@ export function DriftList({
               <ul>
                 {rows.map((i) => (
                   <li key={i.id}>
-                    {dense ? (
-                      <button
-                        onClick={() => onSelect(i.id)}
-                        aria-current={i.id === selectedId}
-                        className={`relative grid w-full grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.2fr)_130px] items-center gap-4 py-2 pl-6 pr-5 text-left transition hover:bg-sunken/70 ${i.id === selectedId ? 'bg-accent-soft' : ''}`}
-                      >
-                        <span className={`absolute bottom-1.5 left-2.5 top-1.5 w-[3px] rounded-full ${SEV_BAR[i.severity]}`} />
-                        <span className="truncate font-medium">{i.title}</span>
-                        <span className="truncate text-[12.5px] text-muted">{i.service}</span>
-                        <span className="truncate text-[12.5px] text-muted">{i.doc_title ?? ''}</span>
-                        <span className="truncate text-right text-[12px] text-muted">{STATE_LABEL[i.state]}</span>
-                      </button>
-                    ) : (
                     <button
                       onClick={() => onSelect(i.id)}
                       aria-current={i.id === selectedId}
-                      className={`group relative flex w-full flex-col gap-0.5 py-2.5 pl-6 pr-5 text-left transition ${i.id === selectedId ? 'bg-accent-soft' : 'hover:bg-sunken/70'}`}
+                      className={`relative flex w-full items-center py-2.5 pl-6 pr-5 text-left transition-colors ${i.id === selectedId ? 'bg-accent-soft' : 'hover:bg-sunken/70'}`}
                     >
                       <span className={`absolute bottom-2 left-2.5 top-2 w-[3px] rounded-full ${SEV_BAR[i.severity]}`} />
-                      <span className="truncate font-medium leading-snug">{i.title}</span>
-                      <span className="truncate text-[12px] text-muted">
-                        {i.service}{i.doc_title ? ` · ${i.doc_title}` : ''}{tab !== 'decide' ? ` · ${STATE_LABEL[i.state]}` : ''}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium leading-snug">{i.title}</span>
+                        <span className="block overflow-hidden truncate text-[12px] text-muted" style={{ maxHeight: 18 * (1 - t), opacity: 1 - t * 1.6 }}>
+                          {i.service}{i.doc_title ? ` · ${i.doc_title}` : ''}{tab !== 'decide' ? ` · ${STATE_LABEL[i.state]}` : ''}
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 gap-4 overflow-hidden whitespace-nowrap text-[12.5px] text-muted"
+                        style={{ width: t * 400, opacity: t, marginLeft: t * 16 }} aria-hidden={t < 0.5}>
+                        <span className="w-[100px] truncate">{i.service}</span>
+                        <span className="w-[150px] truncate">{i.doc_title ?? ''}</span>
+                        <span className="w-[100px] truncate text-right">{STATE_LABEL[i.state]}</span>
                       </span>
                     </button>
-                    )}
                   </li>
                 ))}
               </ul>

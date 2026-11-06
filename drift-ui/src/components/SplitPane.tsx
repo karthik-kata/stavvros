@@ -10,7 +10,6 @@ const HANDLE = 10;
 const SNAP_EDGE = 150;       // px from either edge where the divider snaps to list-only / detail-only
 const MIN_LIST = 300;        // narrowest useful list in split mode
 const MIN_DETAIL = 420;      // narrowest useful detail in split mode
-export const WIDE_LIST = 640; // list wider than this renders as a table
 
 /**
  * Two panes with a draggable divider. Dragging to an edge collapses a pane (List / Focus);
@@ -19,7 +18,7 @@ export const WIDE_LIST = 640; // list wider than this renders as a table
 export function SplitPane({ frac, onFrac, left, right }: {
   frac: Frac;
   onFrac: (f: Frac) => void;
-  left: (wide: boolean) => ReactNode;
+  left: ReactNode;
   right: ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
@@ -61,7 +60,7 @@ export function SplitPane({ frac, onFrac, left, right }: {
     <div ref={box} className={`flex h-full min-h-0 overflow-hidden ${dragging ? 'select-none' : ''}`}>
       <div className={`min-h-0 shrink-0 overflow-y-auto overflow-x-hidden ${dragging ? '' : 'transition-[width] duration-200'}`}
         style={{ width: shown * track }} aria-hidden={shown === 0}>
-        {shown > 0 && left(shown * track > WIDE_LIST)}
+        {shown > 0 && left}
       </div>
       <div
         role="separator" aria-orientation="vertical" tabIndex={0}

@@ -119,9 +119,9 @@ export default function App() {
           <div className="grid h-full place-items-center">{error ? null : <Spinner label="Scanning acme-shop…" />}</div>
         ) : view === 'drift' ? (
           <SplitPane frac={frac} onFrac={setFrac}
-            left={(wide) => (
+            left={(
               <>
-                <DriftList dense={wide} items={items} selectedId={selected} onSelect={pick} tab={tab}
+                <DriftList items={items} selectedId={selected} onSelect={pick} tab={tab}
                   onTab={(t) => { setTab(t); if (t === 'matches') setSelected(null); }} verifiedCount={claims?.verified.length ?? 0} />
                 {mode === 'list' && tab === 'matches' && <Matches claims={claims} />}
               </>
