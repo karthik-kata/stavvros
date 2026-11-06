@@ -6,12 +6,13 @@ React 18 + TypeScript + Vite 5 + Tailwind 3 + Cytoscape 3 + lucide-react. Dev se
 
 | File | Role |
 | --- | --- |
-| `src/api.ts` | Typed fetch client for every endpoint in `docs/api.md`. Turns network failures into a message telling you to start the backend |
+| `src/api.ts` | Typed fetch client for every endpoint in `docs/api.md`; `api.setRepo(id)` picks the repository for all per-repo calls. Turns network failures into a message telling you to start the backend |
 | `src/types.ts` | Mirrors `models.py`. Update by hand when the backend models change |
-| `src/App.tsx` | Top bar (logo, views, scan status, Reset (LLM name only in the scan popover)), view switching, list tab, selection, refresh after every change |
+| `src/App.tsx` | Top bar (logo, views, scan status, Reset (demo repo only; LLM name only in the scan popover)), view switching, list tab, selection, refresh after every change |
 | `components/DriftList.tsx` | Level 0: summary sentence, tabs (To decide / In progress / Closed / Matches), rows grouped by severity |
 | `components/DriftView.tsx` | Levels 1–3 for one drift: verdict, actions, drafted change, progress, collapsible Evidence / How found / History |
 | `components/Matches.tsx` | Verified doc claims grouped by doc, plus claims that could not be checked |
+| `components/RepoPicker.tsx` | Top-bar repository switcher: list with open-drift counts, add a folder or git URL, remove. Last choice saved as `drift-repo` |
 | `components/ScanStatus.tsx` | "Scanned 2 min ago" + Scan button; popover with the pipeline numbers (AST facts, parser/LLM claims, LLM calls per task, results) |
 | `components/SystemMap.tsx` | Secondary view. Cytoscape graph laid out in columns: docs on top, one column per service with its routes below. Nodes show only a heading; clicking expands a card with details and the node's drifts |
 | `components/Assistant.tsx` | Secondary view. Ask a task, see the drift warnings and facts `/api/context` returns, optionally the raw payload |

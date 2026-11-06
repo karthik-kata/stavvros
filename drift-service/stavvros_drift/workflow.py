@@ -6,7 +6,6 @@ disappears because the docs and code really agree again.
 """
 from __future__ import annotations
 
-import json
 import shutil
 import threading
 from datetime import datetime, timezone
@@ -15,6 +14,7 @@ from typing import Any, Optional
 
 from .detect.engine import Detector, ScanResult
 from .extract.docs import parse_doc
+from .store import JsonStore, StateStore
 from .models import DriftListItem, DriftRecord, Finding, Issue, Person, ProposedChange, TimelineEvent
 
 ACTIVE = ("open", "change_drafted", "in_review", "issue_open")
@@ -29,23 +29,23 @@ class WorkflowError(ValueError):
 
 
 class Workflow:
-    def __init__(self, root: Path, cfg: dict[str, Any], detector: Detector, data_dir: Path, current_user: Person) -> None:
+    def __init__(self, root: Path, cfg: dict[str, Any], detector: Detector, data_dir: Path, current_user: Person,
+                 store: Optional[StateStore] = None, keep_pristine: bool = True) -> None:
         self.root, self.cfg, self.detector, self.data_dir, self.user = root, cfg, detector, data_dir, current_user
-        self.state_file = data_dir / "state.json"
+        self.store: StateStore = store or JsonStore(data_dir / "state.json")
+        self.keep_pristine = keep_pristine
         self.pristine = data_dir / "pristine"
         self.lock = threading.RLock()
         self.records: dict[str, DriftRecord] = {}
         self.last: Optional[ScanResult] = None
         data_dir.mkdir(parents=True, exist_ok=True)
-        if not self.pristine.exists():
+        if keep_pristine and not self.pristine.exists():
             shutil.copytree(root, self.pristine, ignore=shutil.ignore_patterns("__pycache__", ".git"))
-        if self.state_file.exists():
-            raw = json.loads(self.state_file.read_text())
-            self.records = {k: DriftRecord.model_validate(v) for k, v in raw.get("records", {}).items()}
+        self.records = self.store.load()
 
     # ------------------------------------------------------------------ #
     def _save(self) -> None:
-        self.state_file.write_text(json.dumps({"records": {k: v.model_dump() for k, v in self.records.items()}}, indent=1))
+        self.store.save(self.records)
 
     def scan(self) -> ScanResult:
         with self.lock:
@@ -66,6 +66,7 @@ class Workflow:
                     rec.timeline = [e for e in rec.timeline if not e.pending]
                     rec.timeline.append(TimelineEvent(at=_now(), label="No longer detected", detail="Docs and code agree after the latest scan"))
             self.last = res
+            self.store.save_report(res.report)
             self._save()
             return res
 
@@ -178,6 +179,8 @@ class Workflow:
 
     def reset(self) -> ScanResult:
         """Restore the scanned codebase from the pristine copy and forget all decisions."""
+        if not self.keep_pristine:
+            raise WorkflowError("Only the demo repository can be reset; this one is your real code.")
         with self.lock:
             for sub in self.pristine.iterdir():
                 dest = self.root / sub.name

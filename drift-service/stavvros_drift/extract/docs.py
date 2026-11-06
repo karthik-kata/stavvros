@@ -149,5 +149,11 @@ def _table_claims(doc: Doc, section: str, header_line: int, header: list[str], r
             ))
 
 
+from .python_ast import SKIP_DIRS  # noqa: E402
+
+
 def parse_docs(root: Path, docs_dir: str) -> list[Doc]:
-    return [parse_doc(root, p) for p in sorted((root / docs_dir).rglob("*.md"))]
+    base = root / docs_dir
+    if not base.is_dir():
+        return []
+    return [parse_doc(root, p) for p in sorted(base.rglob("*.md")) if not SKIP_DIRS.intersection(p.relative_to(base).parts)]

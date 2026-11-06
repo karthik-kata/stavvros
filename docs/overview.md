@@ -21,7 +21,7 @@
                  │                                        ▼              (llm/mock.py by default)    │
                  │                                     ScanResult: Finding[], VerifiedClaim[]       │
                  │                                        ▼                                         │
-                 │                                     workflow.py  Workflow (state.json, apply, reset)
+                 │                                     workflow.py  Workflow (store, apply, reset)
                  │                                        ▼                                         │
                  │                                     api.py / views.py  (REST, graph, assistant)  │
                  └──────────────────────────────────────────┬───────────────────────────────────────┘
@@ -57,7 +57,7 @@
 5. Outbound HTTP calls are checked against target routes; undocumented routes are triaged by the LLM.
 6. Each finding gets a title and impact (`summarize_finding`).
 7. `Workflow` matches findings to saved records by fingerprint: new ones start `open`, known ones keep their state, ones that disappeared while active become `resolved`.
-8. State is written to `.stavvros-data/state.json`. The UI reads `/api/drifts`.
+8. State and the last scan report are written to the SQLite store `.stavvros-data/stavvros.db` (one row set per repository). The UI reads `/api/drifts`.
 
 A scan of acme-shop takes ~20 ms with the mock.
 
@@ -65,7 +65,7 @@ A scan of acme-shop takes ~20 ms with the mock.
 
 | Path | Contents |
 | --- | --- |
-| `state.json` | Every `DriftRecord` keyed by fingerprint |
+| `stavvros.db` | SQLite: `repos`, `records` (every `DriftRecord` keyed by repo + fingerprint), `reports` (last `ScanReport`) |
 | `pristine/` | Copy of the codebase taken at first start; used by reset |
 | `changes/<id>.diff` | Drafted changes that were sent for review |
 | `issues/<id>.md` | Issues opened when the doc is right and no code patch could be drafted |

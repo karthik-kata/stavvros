@@ -42,7 +42,7 @@ Run the tests with `pytest`. They cover detection, the fix workflow, swapping th
 
 Each finding records how it was found (rule, engine, confidence, reasoning, the facts used). The UI shows this under "How Stavvros found this".
 
-Findings have stable fingerprints. Decisions are saved in `.stavvros-data/state.json`, so a dismissal survives rescans and restarts. A drift is resolved when a rescan no longer finds it.
+Findings have stable fingerprints. Decisions are saved in `.stavvros-data/stavvros.db`, so a dismissal survives rescans and restarts. A drift is resolved when a rescan no longer finds it.
 
 ## Swapping the model
 
@@ -117,7 +117,7 @@ In code and tests, pass an instance instead: `build_container(llm=ClaudeBackend(
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `STAVVROS_CODEBASE` | `../acme-shop` | Codebase to scan. Needs a `stavvros.json`. |
+| `STAVVROS_CODEBASE` | `../acme-shop` | First repository, registered on first start (the demo). More are added from the UI or `POST /api/repos`. |
 | `STAVVROS_DATA` | `.stavvros-data` | Decisions, the pristine snapshot, drafted diffs, issues, LLM cache |
 | `STAVVROS_LLM` | `stavvros_drift.llm.mock:MockLLM` | `module:Class` of the model backend |
 | `STAVVROS_LLM_CACHE` | `1` | Cache real-model answers on disk (the mock is never cached) |

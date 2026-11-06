@@ -55,15 +55,24 @@ class Container:
     workflow: Workflow
 
 
+def make_workflow(s: Settings, backend: LLMBackend, root: Path, cfg: dict, data_dir: Path,
+                  store=None, keep_pristine: bool = True) -> tuple[Reasoner, Detector, Workflow]:
+    """One repository's engine: its own reasoner (call counters, cache), detector and workflow."""
+    cache = data_dir / f"llm-cache-{backend.name.split()[0]}.json" if s.cache_llm and not backend.name.startswith("mock") else None
+    reasoner = Reasoner(backend, cache_file=cache)
+    detector = Detector(reasoner)
+    workflow = Workflow(root, cfg, detector, data_dir, Person(name=s.user_name, team=s.user_team, role="Tech lead"),
+                        store=store, keep_pristine=keep_pristine)
+    return reasoner, detector, workflow
+
+
 def build_container(settings: Optional[Settings] = None, llm: Optional[LLMBackend] = None) -> Container:
+    """A single-repository engine (tests, scripts). The HTTP service uses `Registry` instead."""
     s = settings or Settings()
     cfg_file = s.codebase / "stavvros.json"
     if not cfg_file.exists():
         raise FileNotFoundError(f"No stavvros.json in {s.codebase}. Set STAVVROS_CODEBASE to the codebase to scan.")
     cfg = json.loads(cfg_file.read_text())
     backend = llm or load_backend(s.llm)
-    cache = s.data_dir / f"llm-cache-{backend.name.split()[0]}.json" if s.cache_llm and not backend.name.startswith("mock") else None
-    reasoner = Reasoner(backend, cache_file=cache)
-    detector = Detector(reasoner)
-    workflow = Workflow(s.codebase, cfg, detector, s.data_dir, Person(name=s.user_name, team=s.user_team, role="Tech lead"))
+    reasoner, detector, workflow = make_workflow(s, backend, s.codebase, cfg, s.data_dir)
     return Container(s, backend, reasoner, detector, workflow)

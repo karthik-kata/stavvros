@@ -12,6 +12,8 @@ from typing import Any, Iterable, Optional
 
 from ..models import CodeFact
 
+SKIP_DIRS = frozenset({".git", ".venv", "venv", "node_modules", "__pycache__", "site-packages", "dist", "build", ".tox"})
+
 HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
 _camel = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 
@@ -107,6 +109,8 @@ class _ServiceScanner:
     # -- passes -----------------------------------------------------------
     def load(self) -> None:
         for path in sorted(self.dir.rglob("*.py")):
+            if SKIP_DIRS.intersection(path.relative_to(self.dir).parts):
+                continue
             rel = str(path.relative_to(self.root))
             src = path.read_text()
             self.index.files[rel] = src.split("\n")

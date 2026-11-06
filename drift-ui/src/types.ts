@@ -57,3 +57,8 @@ export interface AssistantContext {
   question: string; services: string[]; answer: string[];
   drift_warnings: { drift_id: string; title: string; severity: Severity; doc_says: string; code_does: string; doc: string | null; guidance: string }[];
 }
+
+export interface RepoInfo {
+  id: string; name: string; source: 'path' | 'git'; location: string; demo: boolean;
+  added_at: string; last_scanned: string | null; open_drifts: number | null; error: string | null;
+}

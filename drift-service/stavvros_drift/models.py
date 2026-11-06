@@ -218,3 +218,16 @@ class ScanReport(BaseModel):
     llm_calls: dict[str, int]
     findings: dict[str, int]
     verified_claims: int
+
+
+class RepoInfo(BaseModel):
+    """A repository Stavvros watches. `source` is a folder on this machine ('path') or a git clone ('git')."""
+    id: str
+    name: str
+    source: str
+    location: str
+    demo: bool = False
+    added_at: str
+    last_scanned: Optional[str] = None
+    open_drifts: Optional[int] = None
+    error: Optional[str] = None

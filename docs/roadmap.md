@@ -8,11 +8,14 @@
 - **Retrieval is keyword overlap.** Fine for a small codebase; a large one needs embeddings or symbol-aware search.
 - **One constant per claim.** Rules implemented across several values or functions are judged only through the best-matching fact.
 - **Review is simulated.** "Send" writes a diff file; "Approve" writes to disk. No PRs, webhooks or notifications.
-- **Single user**, configured by env var. No auth on the API.
+- **Single user**, configured by env var. No auth on the API. Anyone who can reach the service can scan any folder it can read.
+- **Full rescans.** Every scan recomputes everything; see "Not built yet: incremental scans" in `docs/repositories.md`.
+- **Service discovery is a heuristic** for repos without `stavvros.json` (FastAPI only).
 - **Path-parameter names** are ignored when matching routes (`{id}` = `{order_id}`), which avoids the false positives of the old engine but would miss a genuine parameter rename.
 
 ## Next steps, roughly in order
 
+0. Incremental scans: hash files, re-extract and re-judge only what changed (`docs/repositories.md`).
 1. Implement and evaluate a real backend (Claude API or a local model) against acme-shop; write a looser test suite for it.
 2. Expose `/api/context` as an MCP tool so coding assistants get drift warnings while they work.
 3. Git integration: scan on push, open the drafted change as a PR, resolve on merge.

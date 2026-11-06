@@ -43,4 +43,4 @@ Claims that are true and should be verified, not flagged (23 total), include the
 
 ## Changing scenarios
 
-Edit the service code or docs, then update `drift-service/tests/test_detection.py` (it asserts these titles and `len(findings) == 12`) and this table. If the running service already took its `pristine/` snapshot, delete `drift-service/.stavvros-data/` so Reset uses your new version.
+Edit the service code or docs, then update `drift-service/tests/test_detection.py` (it asserts these titles and `len(findings) == 12`) and this table. If the running service already took its `pristine/` snapshot, delete `drift-service/.stavvros-data/repos/acme-shop/pristine/` so Reset uses your new version.

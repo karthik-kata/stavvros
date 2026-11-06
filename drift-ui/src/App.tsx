@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { api } from './api';
-import type { Claims, DriftListItem, Graph, ScanReport } from './types';
+import type { Claims, DriftListItem, Graph, RepoInfo, ScanReport } from './types';
 import { DriftList, visibleDrifts, type ListTab } from './components/DriftList';
 import { DriftView } from './components/DriftView';
 import { Matches } from './components/Matches';
+import { RepoPicker } from './components/RepoPicker';
 import { ScanStatus } from './components/ScanStatus';
 import { DEFAULT_SPLIT, DETAIL_ONLY, LIST_ONLY, SplitPane, type Frac } from './components/SplitPane';
 import { SystemMap } from './components/SystemMap';
@@ -60,21 +61,52 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   });
 
+  const [repos, setRepos] = useState<RepoInfo[]>([]);
+  const [repoId, setRepoId] = useState<string | null>(null);
+  const current = repos.find((r) => r.id === repoId) ?? null;
+  const epoch = useRef(0);   // answers for a repository we've since left are dropped
+
   const refresh = useCallback(async () => {
+    const mine = epoch.current;
     try {
       const [list, rep, cl, g] = await Promise.all([api.drifts(), api.lastScan(), api.claims(), api.graph()]);
+      if (mine !== epoch.current) return;
       setItems(list); setReport(rep); setClaims(cl); setGraph(g); setError(null);
       setSelected((cur) => cur ?? list.find((i) => i.state === 'open')?.id ?? null);
     } catch (e) {
-      setError((e as Error).message);
+      if (mine === epoch.current) setError((e as Error).message);
     }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  const openRepo = useCallback((id: string) => {
+    epoch.current += 1;
+    api.setRepo(id);
+    try { localStorage.setItem('drift-repo', id); } catch { /* ignore */ }
+    setRepoId(id); setItems(null); setReport(null); setClaims(null); setGraph(null);
+    setSelected(null); setFocus(null); setTab('decide'); setError(null);
+    refresh();
+  }, [refresh]);
+
+  /** Reload the repository list; open `selectId`, else keep the current one, else the last used, else the first. */
+  const loadRepos = useCallback(async (selectId?: string) => {
+    try {
+      const list = await api.repos();
+      setRepos(list);
+      let saved: string | null = null;
+      try { saved = localStorage.getItem('drift-repo'); } catch { /* ignore */ }
+      const want = [selectId, repoId, saved].find((id) => id && list.some((r) => r.id === id)) ?? list[0]?.id;
+      if (want && want !== repoId) openRepo(want);
+      else if (!want) { setRepoId(null); setItems([]); setError('No repositories yet. Add one from the menu in the top bar.'); }
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, [repoId, openRepo]);
+
+  useEffect(() => { loadRepos(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   const scan = async (fn: () => Promise<ScanReport>) => {
     setScanning(true);
-    try { await fn(); await refresh(); setVersion((v) => v + 1); } catch (e) { setError((e as Error).message); } finally { setScanning(false); }
+    try { await fn(); await refresh(); await loadRepos(); setVersion((v) => v + 1); } catch (e) { setError((e as Error).message); } finally { setScanning(false); }
   };
 
   const openDrift = (id: string) => {
@@ -88,11 +120,9 @@ export default function App() {
       <header className="flex items-center gap-6 border-b border-line bg-panel px-5 py-2.5">
         <div className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-md bg-ink font-display text-[17px] font-bold text-onink">S</span>
-          <div className="leading-tight">
-            <div className="font-display text-[16px] font-semibold">Stavvros</div>
-            <div className="font-mono text-[11px] text-muted">{report?.codebase ?? '…'}</div>
-          </div>
+          <div className="font-display text-[16px] font-semibold">Stavvros</div>
         </div>
+        <RepoPicker repos={repos} current={current} onSelect={openRepo} onChanged={loadRepos} />
         <nav className="flex items-center gap-1 text-[13px]" aria-label="Views">
           <button onClick={() => setView('drift')} aria-current={view === 'drift' ? 'page' : undefined}
             className={`rounded-md px-3 py-1.5 font-medium ${view === 'drift' ? 'bg-ink text-onink' : 'text-ink hover:bg-sunken'}`}>Drift</button>
@@ -106,9 +136,11 @@ export default function App() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <ScanStatus report={report} scanning={scanning} onScan={() => scan(api.scan)} />
-          <button className="btn btn-ghost" title="Restore the mock codebase and clear decisions" onClick={() => { setSelected(null); scan(api.reset); }}>
-            <RotateCcw size={14} />Reset
-          </button>
+          {current?.demo && (
+            <button className="btn btn-ghost" title="Restore the demo codebase and clear decisions" onClick={() => { setSelected(null); scan(api.reset); }}>
+              <RotateCcw size={14} />Reset
+            </button>
+          )}
         </div>
       </header>
 
@@ -116,7 +148,7 @@ export default function App() {
 
       <main className="min-h-0 flex-1">
         {!items ? (
-          <div className="grid h-full place-items-center">{error ? null : <Spinner label="Scanning acme-shop…" />}</div>
+          <div className="grid h-full place-items-center">{error ? null : <Spinner label={`Scanning ${current?.name ?? ''}…`} />}</div>
         ) : view === 'drift' ? (
           <SplitPane frac={frac} onFrac={setFrac}
             left={(

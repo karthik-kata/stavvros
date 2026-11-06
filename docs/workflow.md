@@ -28,7 +28,7 @@ The current user (`Settings.user_name`, default Alex) is recorded on decisions.
 
 ## Persistence and rescans
 
-`Workflow.scan()` merges each scan with `state.json` by fingerprint:
+`Workflow.scan()` merges each scan with the stored records (`store.py`) by fingerprint:
 
 - new fingerprint (or one previously `resolved`) → new record, `open`, timeline "Detected";
 - known fingerprint → keep state and history, refresh `finding`;

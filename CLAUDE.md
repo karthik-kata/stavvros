@@ -18,7 +18,7 @@ Stavvros finds places where engineering docs (PRDs, API references, policies) no
 # Backend: http://localhost:8100
 cd drift-service && source .venv/bin/activate   # first time: python3 -m venv .venv && pip install -r requirements.txt
 uvicorn stavvros_drift.api:create_app --factory --port 8100 --reload
-pytest                                           # 14 tests: detection, workflow, LLM swap, API
+pytest                                           # 23 tests: detection, workflow, LLM swap, API, repositories
 
 # UI: http://localhost:5175 (proxies /api to :8100)
 cd drift-ui && npm install && npm run dev
@@ -42,6 +42,7 @@ npx tsc --noEmit                                 # type-check
 - `docs/detection.md`: the pipeline, every rule, severity, fingerprints
 - `docs/llm.md`: the LLM seam, prompts, mock, swapping in Claude or a local model
 - `docs/data-model.md`: facts, claims, findings, records
+- `docs/repositories.md`: adding repos, service discovery, SQLite storage, planned incremental scans
 - `docs/workflow.md`: decision states, persistence, applying fixes, reset
 - `docs/api.md`: HTTP endpoints
 - `docs/frontend.md`: UI structure and the information hierarchy
