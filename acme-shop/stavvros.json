@@ -1,0 +1,12 @@
+{
+  "name": "acme-shop",
+  "docs_dir": "docs",
+  "services": {
+    "payments": { "path": "services/payments", "team": "Payments Platform", "owner": "Priya", "owner_role": "Staff engineer" },
+    "orders": { "path": "services/orders", "team": "Orders", "owner": "Marcus", "owner_role": "Engineering manager" },
+    "checkout": { "path": "services/checkout", "team": "Checkout", "owner": "Alex", "owner_role": "Tech lead" },
+    "notifications": { "path": "services/notifications", "team": "Growth", "owner": "Lena", "owner_role": "Tech lead" },
+    "auth": { "path": "services/auth", "team": "Identity", "owner": "Sam", "owner_role": "Security lead" }
+  },
+  "ignore_routes": ["/healthz"]
+}

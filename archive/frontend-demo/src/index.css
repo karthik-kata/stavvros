@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-canvas text-ink font-sans antialiased; font-size: 14px; }
+  :focus-visible { outline: 2px solid #2C5A88; outline-offset: 2px; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center gap-1.5 rounded-md border border-ink bg-panel px-3 py-1.5 text-[13px] font-medium text-ink transition hover:bg-sunken disabled:opacity-50; }
+  .btn-primary { @apply border-ink bg-ink text-white hover:bg-ink-soft; }
+  .btn-ghost { @apply border-line text-muted hover:text-ink; }
+  .chip { @apply inline-flex items-center rounded px-1.5 py-px font-mono text-[10.5px] font-medium tracking-wide whitespace-nowrap; }
+  .eyebrow { @apply font-mono text-[11px] uppercase tracking-[0.08em] text-muted; }
+  .card { @apply rounded-lg border border-line bg-panel; }
+  .codebox { @apply rounded-md bg-sunken p-2.5 font-mono text-[12px] leading-5 whitespace-pre-wrap break-words; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #C5CDD7; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --ink: 232 236 241; --ink-soft: 184 193 205; --onink: 14 18 24; --muted: 141 153 169;
+  --line: 52 62 76; --canvas: 14 18 24; --panel: 21 27 35; --sunken: 29 36 47;
+  --accent: 110 168 232; --accent-soft: 24 42 66; --accent-strong: 150 195 245;
+  --drift: 240 138 75; --drift-soft: 52 33 20;
+  --crit: 242 118 107; --crit-soft: 56 26 24;
+  --warn: 217 164 65; --warn-soft: 48 40 18;
+  --ok: 76 195 138; --ok-soft: 18 44 33;
+}
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-canvas text-ink font-sans antialiased; font-size: 14px; }
+  :focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center gap-1.5 rounded-md border border-ink bg-panel px-3 py-1.5 text-[13px] font-medium text-ink transition hover:bg-sunken disabled:opacity-50; }
+  .btn-primary { @apply border-ink bg-ink text-onink hover:bg-ink-soft; }
+  .btn-ghost { @apply border-line text-muted hover:text-ink; }
+  .chip { @apply inline-flex items-center rounded px-1.5 py-px font-mono text-[10.5px] font-medium tracking-wide whitespace-nowrap; }
+  .eyebrow { @apply font-mono text-[11px] uppercase tracking-[0.08em] text-muted; }
+  .card { @apply rounded-lg border border-line bg-panel; }
+  .codebox { @apply rounded-md bg-sunken p-2.5 font-mono text-[12px] leading-5 whitespace-pre-wrap break-words; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgb(var(--line)); border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

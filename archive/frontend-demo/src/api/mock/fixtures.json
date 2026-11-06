@@ -1,0 +1,1799 @@
+{
+ "workspace": {
+  "workspace_name": "stavvros-workspace",
+  "workspace_path": "stavvros-workspace",
+  "services_count": 2,
+  "docs_count": 2,
+  "inferred_mode": "ast_and_markdown",
+  "zero_hardcoding": true
+ },
+ "graph": {
+  "nodes": [
+   {
+    "id": "team-checkout-team",
+    "label": "Checkout Team",
+    "subtitle": "Engineering Team (Checkout Team)",
+    "type": "team",
+    "properties": {
+     "team_name": "Checkout Team"
+    },
+    "team_id": null,
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   {
+    "id": "team-payments-platform-team",
+    "label": "Payments Platform Team",
+    "subtitle": "Engineering Team (Payments Platform Team)",
+    "type": "team",
+    "properties": {
+     "team_name": "Payments Platform Team"
+    },
+    "team_id": null,
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   {
+    "id": "service-checkout-service",
+    "label": "checkout-service",
+    "subtitle": "\u26a1 FastAPI \u2022 Pydantic \u2022 HTTP Client",
+    "type": "service",
+    "properties": {
+     "repository": "services/checkout-service",
+     "blueprint": {
+      "service_id": "checkout-service",
+      "name": "checkout-service",
+      "mission": "Checkout Service API",
+      "tech_stack": [
+       "FastAPI",
+       "Pydantic",
+       "HTTP Client",
+       "Python 3.13"
+      ],
+      "execution_pipeline": [
+       {
+        "step_number": 1,
+        "title": "Route: POST /api/checkout/cart",
+        "description": "Submits customer shopping cart for checkout processing. Validates parameters: request.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 2,
+        "title": "Route: GET /api/checkout/orders/{order_id}",
+        "description": "Retrieves order summary and eligibility status for returns. Validates parameters: order_id.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 3,
+        "title": "Route: POST /api/checkout/request-refund",
+        "description": "Triggers refund workflow by calling the Payments Platform. Validates parameters: order_id, amount_cents, reason.",
+        "component": "FastAPI Route Handler"
+       }
+      ],
+      "models": [
+       {
+        "name": "CartItem",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "item_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "quantity",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "price_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       },
+       {
+        "name": "CheckoutRequest",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "cart_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "user_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "items",
+          "type_annotation": "list[CartItem]",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "currency",
+          "type_annotation": "str",
+          "is_required": false,
+          "default_value": "'USD'"
+         }
+        ]
+       }
+      ],
+      "files": [
+       "main.py",
+       "client.py"
+      ]
+     }
+    },
+    "team_id": "team-checkout-team",
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   {
+    "id": "service-payment-service",
+    "label": "payment-service",
+    "subtitle": "\u26a1 FastAPI \u2022 Pydantic \u2022 Apache Kafka",
+    "type": "service",
+    "properties": {
+     "repository": "services/payment-service",
+     "blueprint": {
+      "service_id": "payment-service",
+      "name": "payment-service",
+      "mission": "Payment Platform Service API",
+      "tech_stack": [
+       "FastAPI",
+       "Pydantic",
+       "Apache Kafka",
+       "Async Event Bus",
+       "Python 3.13"
+      ],
+      "execution_pipeline": [
+       {
+        "step_number": 1,
+        "title": "Route: POST /v2/charges",
+        "description": "Processes credit card authorization and capture. Validates parameters: charge.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 2,
+        "title": "Route: POST /v2/refunds/async",
+        "description": "Asynchronously initiates customer refund. Validates parameters: refund, x_idempotency_key.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 3,
+        "title": "Asynchronous Event Streaming",
+        "description": "Emits event payload to topic 'payment.refund.initiated' for background processing.",
+        "component": "Kafka Event Bus"
+       },
+       {
+        "step_number": 4,
+        "title": "Route: GET /v2/transactions/{transaction_id}",
+        "description": "Fetches transaction ledger status from database. Validates parameters: transaction_id.",
+        "component": "FastAPI Route Handler"
+       }
+      ],
+      "models": [
+       {
+        "name": "ChargeRequest",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "account_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "amount_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "currency",
+          "type_annotation": "str",
+          "is_required": false,
+          "default_value": "'USD'"
+         },
+         {
+          "name": "token",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       },
+       {
+        "name": "RefundRequest",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "order_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "amount_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "currency",
+          "type_annotation": "str",
+          "is_required": false,
+          "default_value": "'USD'"
+         },
+         {
+          "name": "reason",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "manager_approval",
+          "type_annotation": "Optional[bool]",
+          "is_required": false,
+          "default_value": "False"
+         }
+        ]
+       },
+       {
+        "name": "LedgerEntry",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "entry_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "account_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "amount_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "entry_type",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "timestamp",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       },
+       {
+        "name": "PaymentMethod",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "method_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "brand",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "last4",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "exp_month",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "exp_year",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       }
+      ],
+      "files": [
+       "main.py",
+       "models.py"
+      ]
+     }
+    },
+    "team_id": "team-payments-platform-team",
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   {
+    "id": "doc-PRD-2025-Refund-Policy",
+    "label": "PRD: Self-Service Customer Refund Policy & Workflow",
+    "subtitle": "\ud83d\udcc4 FleetHD PRD Spec",
+    "type": "document",
+    "properties": {
+     "objective": "Enable verified customers to initiate self-service refunds directly within the online store checkout and order history portal within 30 days of purchase, reducing tier-1 customer support ticket volume by 40%. ---",
+     "scope_in": [
+      "Full and partial refunds for credit card, debit card, and digital wallet purchases.",
+      "Validation of 30-day return window from order delivery timestamp.",
+      "Direct automated ledger reversal and customer receipt email notifications.",
+      "Idempotent request handling via client-generated `X-Idempotency-Key`."
+     ],
+     "scope_out": [
+      "Cash-on-delivery or in-store cash payouts.",
+      "Physical parcel return tracking (handled by Logistics Service).",
+      "Cryptographic or third-party gift voucher balance reloads.",
+      ""
+     ],
+     "success_criteria": [
+      "Performance**: P99 response time for refund initiation must be under 250ms.",
+      "Availability**: 99.95% uptime on the refund processing endpoint.",
+      "Accuracy**: 100% reconciliation match between checkout refund state and payment ledger.",
+      "Security**: Mandatory TLS 1.3 and JWT signature verification on all requests.",
+      ""
+     ],
+     "technical_changes": [
+      "### Target Service",
+      "- **Service Name**: `payment-service`",
+      "- **Owner**: Payments Platform Team",
+      "- **Repository**: `stavvros-workspace/services/payment-service`",
+      "### API Specifications",
+      "The checkout service will invoke the payment service refund endpoint:",
+      "- **HTTP Method**: `POST`",
+      "- **Endpoint**: `/v1/refunds`",
+      "- **Communication Protocol**: Synchronous REST HTTP 200 OK",
+      "- **Request Headers**:",
+      "- `Content-Type: application/json`",
+      "- `X-Idempotency-Key: <UUID>`",
+      "- **Request Payload**:",
+      "```json",
+      "{",
+      "\"order_id\": \"ord_98741\",",
+      "\"amount_cents\": 4999,",
+      "\"currency\": \"USD\",",
+      "\"reason\": \"customer_return\",",
+      "\"manager_approval\": false",
+      "}",
+      "```",
+      "- **Response**: Synchronous JSON payload with `refund_id` and status `COMPLETED`."
+     ]
+    },
+    "team_id": "team-checkout-team",
+    "service_id": null,
+    "file_path": "stavvros-workspace/docs/PRD-2025-Refund-Policy.md",
+    "status": "active"
+   },
+   {
+    "id": "doc-Architecture-Payments",
+    "label": "Architecture Specification: Payments & Checkout System Boundaries",
+    "subtitle": "\ud83d\udcc4 Architecture Spec",
+    "type": "document",
+    "properties": {
+     "objective": "",
+     "scope_in": [],
+     "scope_out": [],
+     "success_criteria": [],
+     "technical_changes": []
+    },
+    "team_id": "team-payments-platform-team",
+    "service_id": null,
+    "file_path": "stavvros-workspace/docs/Architecture-Payments.md",
+    "status": "active"
+   },
+   {
+    "id": "api-checkout-service-POST-_api_checkout_cart",
+    "label": "POST /api/checkout/cart",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "submit_cart",
+     "line_number": 24,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "checkout-service",
+    "file_path": "stavvros-workspace/services/checkout-service/main.py",
+    "status": "active"
+   },
+   {
+    "id": "api-checkout-service-GET-_api_checkout_orders_{order_id}",
+    "label": "GET /api/checkout/orders/{order_id}",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "get_order",
+     "line_number": 30,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "checkout-service",
+    "file_path": "stavvros-workspace/services/checkout-service/main.py",
+    "status": "active"
+   },
+   {
+    "id": "api-checkout-service-POST-_api_checkout_request-refund",
+    "label": "POST /api/checkout/request-refund",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "trigger_refund",
+     "line_number": 35,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "checkout-service",
+    "file_path": "stavvros-workspace/services/checkout-service/main.py",
+    "status": "active"
+   },
+   {
+    "id": "api-payment-service-POST-_v2_charges",
+    "label": "POST /v2/charges",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "create_charge",
+     "line_number": 27,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "payment-service",
+    "file_path": "stavvros-workspace/services/payment-service/main.py",
+    "status": "active"
+   },
+   {
+    "id": "api-payment-service-POST-_v2_refunds_async",
+    "label": "POST /v2/refunds/async",
+    "subtitle": "HTTP 202 \u2022 Async Event",
+    "type": "api",
+    "properties": {
+     "handler": "initiate_refund_async",
+     "line_number": 32,
+     "is_async": true,
+     "status_code": 202,
+     "event_topic": "payment.refund.initiated"
+    },
+    "team_id": null,
+    "service_id": "payment-service",
+    "file_path": "stavvros-workspace/services/payment-service/main.py",
+    "status": "active"
+   },
+   {
+    "id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "label": "GET /v2/transactions/{transaction_id}",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "get_transaction_status",
+     "line_number": 47,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "payment-service",
+    "file_path": "stavvros-workspace/services/payment-service/main.py",
+    "status": "active"
+   }
+  ],
+  "edges": [
+   {
+    "id": "edge-owns-team-checkout-team-checkout-service",
+    "source": "team-checkout-team",
+    "target": "service-checkout-service",
+    "relationship": "owns",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-owns-team-checkout-team-doc-PRD-2025-Refund-Policy",
+    "source": "team-checkout-team",
+    "target": "doc-PRD-2025-Refund-Policy",
+    "relationship": "owns",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-owns-team-payments-platform-team-payment-service",
+    "source": "team-payments-platform-team",
+    "target": "service-payment-service",
+    "relationship": "owns",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-owns-team-payments-platform-team-doc-Architecture-Payments",
+    "source": "team-payments-platform-team",
+    "target": "doc-Architecture-Payments",
+    "relationship": "owns",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-impl-service-checkout-service-api-checkout-service-POST-_api_checkout_cart",
+    "source": "service-checkout-service",
+    "target": "api-checkout-service-POST-_api_checkout_cart",
+    "relationship": "implements",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-impl-service-checkout-service-api-checkout-service-GET-_api_checkout_orders_{order_id}",
+    "source": "service-checkout-service",
+    "target": "api-checkout-service-GET-_api_checkout_orders_{order_id}",
+    "relationship": "implements",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-impl-service-checkout-service-api-checkout-service-POST-_api_checkout_request-refund",
+    "source": "service-checkout-service",
+    "target": "api-checkout-service-POST-_api_checkout_request-refund",
+    "relationship": "implements",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-calls-service-checkout-service-payment-service",
+    "source": "service-checkout-service",
+    "target": "service-payment-service",
+    "relationship": "calls",
+    "confidence": 1.0,
+    "properties": {
+     "caller_file": "stavvros-workspace/services/checkout-service/main.py",
+     "line": 23
+    }
+   },
+   {
+    "id": "edge-impl-service-payment-service-api-payment-service-POST-_v2_charges",
+    "source": "service-payment-service",
+    "target": "api-payment-service-POST-_v2_charges",
+    "relationship": "implements",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-impl-service-payment-service-api-payment-service-POST-_v2_refunds_async",
+    "source": "service-payment-service",
+    "target": "api-payment-service-POST-_v2_refunds_async",
+    "relationship": "implements",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-impl-service-payment-service-api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "source": "service-payment-service",
+    "target": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "relationship": "implements",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-calls-service-payment-service-checkout-service",
+    "source": "service-payment-service",
+    "target": "service-checkout-service",
+    "relationship": "calls",
+    "confidence": 1.0,
+    "properties": {
+     "caller_file": "stavvros-workspace/services/payment-service/main.py",
+     "line": 26
+    }
+   },
+   {
+    "id": "edge-drift-doc-PRD-2025-Refund-Policy-api-payment-service-POST-_v2_refunds_async",
+    "source": "doc-PRD-2025-Refund-Policy",
+    "target": "api-payment-service-POST-_v2_refunds_async",
+    "relationship": "drift_flagged",
+    "confidence": 0.2,
+    "properties": {
+     "alert_id": "alert-ver-contract-PRD-2025-Refund-Policy-POST-_v1_refunds-api-payment-service-POST-_v2_refunds_async",
+     "severity": "critical",
+     "title": "Endpoint Version Drift: /v1/refunds \u2794 /v2/refunds/async",
+     "doc_spec": "Doc line 55: specifies 'POST /v1/refunds'",
+     "code_reality": "Code stavvros-workspace/services/payment-service/main.py:32: implements 'POST /v2/refunds/async' (status: 202)"
+    }
+   },
+   {
+    "id": "edge-specifies-doc-Architecture-Payments-api-payment-service-POST-_v2_charges",
+    "source": "doc-Architecture-Payments",
+    "target": "api-payment-service-POST-_v2_charges",
+    "relationship": "specifies",
+    "confidence": 1.0,
+    "properties": {}
+   },
+   {
+    "id": "edge-specifies-doc-Architecture-Payments-api-payment-service-POST-_v2_refunds_async",
+    "source": "doc-Architecture-Payments",
+    "target": "api-payment-service-POST-_v2_refunds_async",
+    "relationship": "specifies",
+    "confidence": 1.0,
+    "properties": {}
+   }
+  ],
+  "drift_alerts": [
+   {
+    "id": "alert-ver-contract-PRD-2025-Refund-Policy-POST-_v1_refunds-api-payment-service-POST-_v2_refunds_async",
+    "rule_id": "DRIFT-001-VERSION",
+    "evaluator_origin": "ast_rule",
+    "severity": "critical",
+    "title": "Endpoint Version Drift: /v1/refunds \u2794 /v2/refunds/async",
+    "doc_spec": "Doc line 55: specifies 'POST /v1/refunds'",
+    "code_reality": "Code stavvros-workspace/services/payment-service/main.py:32: implements 'POST /v2/refunds/async' (status: 202)",
+    "doc_id": "PRD-2025-Refund-Policy",
+    "service_id": "payment-service",
+    "api_id": "api-payment-service-POST-_v2_refunds_async",
+    "suggested_patch": "Update stavvros-workspace/docs/PRD-2025-Refund-Policy.md (line 55) to reference 'POST /v2/refunds/async'",
+    "status": "open"
+   },
+   {
+    "id": "alert-ver-contract-Architecture-Payments-GET-_v2_transactions_{id}-api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "rule_id": "DRIFT-001-VERSION",
+    "evaluator_origin": "ast_rule",
+    "severity": "critical",
+    "title": "Endpoint Version Drift: /v2/transactions/{id} \u2794 /v2/transactions/{transaction_id}",
+    "doc_spec": "Doc line 26: specifies 'GET /v2/transactions/{id}'",
+    "code_reality": "Code stavvros-workspace/services/payment-service/main.py:47: implements 'GET /v2/transactions/{transaction_id}' (status: 200)",
+    "doc_id": "Architecture-Payments",
+    "service_id": "payment-service",
+    "api_id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "suggested_patch": "Update stavvros-workspace/docs/Architecture-Payments.md (line 26) to reference 'GET /v2/transactions/{transaction_id}'",
+    "status": "open"
+   },
+   {
+    "id": "alert-phantom-contract-Architecture-Payments-GET-_v2_transactions_{id}",
+    "rule_id": "DRIFT-003-PHANTOM",
+    "evaluator_origin": "ast_rule",
+    "severity": "warning",
+    "title": "Phantom Specification: GET /v2/transactions/{id}",
+    "doc_spec": "Doc line 26: specifies 'GET /v2/transactions/{id}'.",
+    "code_reality": "No route implementing this contract found in any active service codebase.",
+    "doc_id": "Architecture-Payments",
+    "service_id": "payment-service",
+    "api_id": null,
+    "suggested_patch": "Implement this route or remove obsolete specification from planning document.",
+    "status": "open"
+   },
+   {
+    "id": "alert-undoc-api-checkout-service-POST-_api_checkout_cart",
+    "rule_id": "DRIFT-004-UNDOCUMENTED",
+    "evaluator_origin": "ast_rule",
+    "severity": "warning",
+    "title": "Undocumented Route: POST /api/checkout/cart",
+    "doc_spec": "No planning document or PRD references this endpoint.",
+    "code_reality": "Declared at stavvros-workspace/services/checkout-service/main.py:24.",
+    "doc_id": "none",
+    "service_id": "checkout-service",
+    "api_id": "api-checkout-service-POST-_api_checkout_cart",
+    "suggested_patch": "Add specification section for 'POST /api/checkout/cart' in service documentation.",
+    "status": "open"
+   },
+   {
+    "id": "alert-undoc-api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "rule_id": "DRIFT-004-UNDOCUMENTED",
+    "evaluator_origin": "ast_rule",
+    "severity": "warning",
+    "title": "Undocumented Route: GET /v2/transactions/{transaction_id}",
+    "doc_spec": "No planning document or PRD references this endpoint.",
+    "code_reality": "Declared at stavvros-workspace/services/payment-service/main.py:47.",
+    "doc_id": "none",
+    "service_id": "payment-service",
+    "api_id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "suggested_patch": "Add specification section for 'GET /v2/transactions/{transaction_id}' in service documentation.",
+    "status": "open"
+   }
+  ],
+  "doc_coverage_pct": 33.3,
+  "active_drift_count": 5,
+  "total_entities_count": 12,
+  "cross_team_services_count": 2
+ },
+ "nodes": {
+  "team-checkout-team": {
+   "node": {
+    "id": "team-checkout-team",
+    "label": "Checkout Team",
+    "subtitle": "Engineering Team (Checkout Team)",
+    "type": "team",
+    "properties": {
+     "team_name": "Checkout Team"
+    },
+    "team_id": null,
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   "drift_alerts": []
+  },
+  "team-payments-platform-team": {
+   "node": {
+    "id": "team-payments-platform-team",
+    "label": "Payments Platform Team",
+    "subtitle": "Engineering Team (Payments Platform Team)",
+    "type": "team",
+    "properties": {
+     "team_name": "Payments Platform Team"
+    },
+    "team_id": null,
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   "drift_alerts": []
+  },
+  "service-checkout-service": {
+   "node": {
+    "id": "service-checkout-service",
+    "label": "checkout-service",
+    "subtitle": "\u26a1 FastAPI \u2022 Pydantic \u2022 HTTP Client",
+    "type": "service",
+    "properties": {
+     "repository": "services/checkout-service",
+     "blueprint": {
+      "service_id": "checkout-service",
+      "name": "checkout-service",
+      "mission": "Checkout Service API",
+      "tech_stack": [
+       "FastAPI",
+       "Pydantic",
+       "HTTP Client",
+       "Python 3.13"
+      ],
+      "execution_pipeline": [
+       {
+        "step_number": 1,
+        "title": "Route: POST /api/checkout/cart",
+        "description": "Submits customer shopping cart for checkout processing. Validates parameters: request.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 2,
+        "title": "Route: GET /api/checkout/orders/{order_id}",
+        "description": "Retrieves order summary and eligibility status for returns. Validates parameters: order_id.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 3,
+        "title": "Route: POST /api/checkout/request-refund",
+        "description": "Triggers refund workflow by calling the Payments Platform. Validates parameters: order_id, amount_cents, reason.",
+        "component": "FastAPI Route Handler"
+       }
+      ],
+      "models": [
+       {
+        "name": "CartItem",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "item_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "quantity",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "price_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       },
+       {
+        "name": "CheckoutRequest",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "cart_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "user_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "items",
+          "type_annotation": "list[CartItem]",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "currency",
+          "type_annotation": "str",
+          "is_required": false,
+          "default_value": "'USD'"
+         }
+        ]
+       }
+      ],
+      "files": [
+       "main.py",
+       "client.py"
+      ]
+     }
+    },
+    "team_id": "team-checkout-team",
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   "blueprint": {
+    "service_id": "checkout-service",
+    "name": "checkout-service",
+    "mission": "Checkout Service API",
+    "tech_stack": [
+     "FastAPI",
+     "Pydantic",
+     "HTTP Client",
+     "Python 3.13"
+    ],
+    "execution_pipeline": [
+     {
+      "step_number": 1,
+      "title": "Route: POST /api/checkout/cart",
+      "description": "Submits customer shopping cart for checkout processing. Validates parameters: request.",
+      "component": "FastAPI Route Handler"
+     },
+     {
+      "step_number": 2,
+      "title": "Route: GET /api/checkout/orders/{order_id}",
+      "description": "Retrieves order summary and eligibility status for returns. Validates parameters: order_id.",
+      "component": "FastAPI Route Handler"
+     },
+     {
+      "step_number": 3,
+      "title": "Route: POST /api/checkout/request-refund",
+      "description": "Triggers refund workflow by calling the Payments Platform. Validates parameters: order_id, amount_cents, reason.",
+      "component": "FastAPI Route Handler"
+     }
+    ],
+    "models": [
+     {
+      "name": "CartItem",
+      "docstring": null,
+      "fields": [
+       {
+        "name": "item_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "quantity",
+        "type_annotation": "int",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "price_cents",
+        "type_annotation": "int",
+        "is_required": true,
+        "default_value": null
+       }
+      ]
+     },
+     {
+      "name": "CheckoutRequest",
+      "docstring": null,
+      "fields": [
+       {
+        "name": "cart_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "user_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "items",
+        "type_annotation": "list[CartItem]",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "currency",
+        "type_annotation": "str",
+        "is_required": false,
+        "default_value": "'USD'"
+       }
+      ]
+     }
+    ],
+    "files": [
+     "main.py",
+     "client.py"
+    ]
+   },
+   "service_files": {
+    "main.py": "\"\"\"\nCheckout Service API\nOwner: Checkout Team (#checkout-devs)\nRepository: stavvros-workspace/services/checkout-service\n\"\"\"\n\nfrom fastapi import FastAPI, HTTPException\nfrom pydantic import BaseModel\n\napp = FastAPI(title=\"Checkout Service\", version=\"1.0.0\")\n\nclass CartItem(BaseModel):\n    item_id: str\n    quantity: int\n    price_cents: int\n\nclass CheckoutRequest(BaseModel):\n    cart_id: str\n    user_id: str\n    items: list[CartItem]\n    currency: str = \"USD\"\n\n@app.post(\"/api/checkout/cart\")\ndef submit_cart(request: CheckoutRequest):\n    \"\"\"Submits customer shopping cart for checkout processing.\"\"\"\n    total = sum(i.price_cents * i.quantity for i in request.items)\n    return {\"status\": \"CHECKOUT_INITIATED\", \"cart_id\": request.cart_id, \"total_cents\": total}\n\n@app.get(\"/api/checkout/orders/{order_id}\")\ndef get_order(order_id: str):\n    \"\"\"Retrieves order summary and eligibility status for returns.\"\"\"\n    return {\"order_id\": order_id, \"status\": \"DELIVERED\", \"eligible_for_refund\": True}\n\n@app.post(\"/api/checkout/request-refund\")\ndef trigger_refund(order_id: str, amount_cents: int, reason: str):\n    \"\"\"\n    Triggers refund workflow by calling the Payments Platform.\n    Note: Depends on payment-service to process money movements.\n    \"\"\"\n    from client import PaymentClient\n    client = PaymentClient()\n    result = client.invoke_refund(order_id=order_id, amount_cents=amount_cents, reason=reason)\n    return {\"order_id\": order_id, \"refund_status\": result}\n",
+    "client.py": "\"\"\"\nPayment Service Client for Checkout Service\nCross-service dependency to payment-service.\n\"\"\"\n\nimport requests\n\nclass PaymentClient:\n    def __init__(self, base_url: str = \"http://payment-service:8001\"):\n        self.base_url = base_url\n\n    def invoke_refund(self, order_id: str, amount_cents: int, reason: str):\n        \"\"\"\n        Dispatches request to payment service.\n        Calls the payment refund endpoint.\n        \"\"\"\n        url = f\"{self.base_url}/v2/refunds/async\"\n        payload = {\n            \"order_id\": order_id,\n            \"amount_cents\": amount_cents,\n            \"reason\": reason\n        }\n        headers = {\"X-Idempotency-Key\": f\"ref_{order_id}\"}\n        # In actual execution, calls requests.post(url, json=payload, headers=headers)\n        return {\"status\": \"REQUESTED\", \"endpoint_used\": url}\n"
+   },
+   "drift_alerts": [
+    {
+     "id": "alert-undoc-api-checkout-service-POST-_api_checkout_cart",
+     "rule_id": "DRIFT-004-UNDOCUMENTED",
+     "evaluator_origin": "ast_rule",
+     "severity": "warning",
+     "title": "Undocumented Route: POST /api/checkout/cart",
+     "doc_spec": "No planning document or PRD references this endpoint.",
+     "code_reality": "Declared at stavvros-workspace/services/checkout-service/main.py:24.",
+     "doc_id": "none",
+     "service_id": "checkout-service",
+     "api_id": "api-checkout-service-POST-_api_checkout_cart",
+     "suggested_patch": "Add specification section for 'POST /api/checkout/cart' in service documentation.",
+     "status": "open"
+    }
+   ]
+  },
+  "service-payment-service": {
+   "node": {
+    "id": "service-payment-service",
+    "label": "payment-service",
+    "subtitle": "\u26a1 FastAPI \u2022 Pydantic \u2022 Apache Kafka",
+    "type": "service",
+    "properties": {
+     "repository": "services/payment-service",
+     "blueprint": {
+      "service_id": "payment-service",
+      "name": "payment-service",
+      "mission": "Payment Platform Service API",
+      "tech_stack": [
+       "FastAPI",
+       "Pydantic",
+       "Apache Kafka",
+       "Async Event Bus",
+       "Python 3.13"
+      ],
+      "execution_pipeline": [
+       {
+        "step_number": 1,
+        "title": "Route: POST /v2/charges",
+        "description": "Processes credit card authorization and capture. Validates parameters: charge.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 2,
+        "title": "Route: POST /v2/refunds/async",
+        "description": "Asynchronously initiates customer refund. Validates parameters: refund, x_idempotency_key.",
+        "component": "FastAPI Route Handler"
+       },
+       {
+        "step_number": 3,
+        "title": "Asynchronous Event Streaming",
+        "description": "Emits event payload to topic 'payment.refund.initiated' for background processing.",
+        "component": "Kafka Event Bus"
+       },
+       {
+        "step_number": 4,
+        "title": "Route: GET /v2/transactions/{transaction_id}",
+        "description": "Fetches transaction ledger status from database. Validates parameters: transaction_id.",
+        "component": "FastAPI Route Handler"
+       }
+      ],
+      "models": [
+       {
+        "name": "ChargeRequest",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "account_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "amount_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "currency",
+          "type_annotation": "str",
+          "is_required": false,
+          "default_value": "'USD'"
+         },
+         {
+          "name": "token",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       },
+       {
+        "name": "RefundRequest",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "order_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "amount_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "currency",
+          "type_annotation": "str",
+          "is_required": false,
+          "default_value": "'USD'"
+         },
+         {
+          "name": "reason",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "manager_approval",
+          "type_annotation": "Optional[bool]",
+          "is_required": false,
+          "default_value": "False"
+         }
+        ]
+       },
+       {
+        "name": "LedgerEntry",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "entry_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "account_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "amount_cents",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "entry_type",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "timestamp",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       },
+       {
+        "name": "PaymentMethod",
+        "docstring": null,
+        "fields": [
+         {
+          "name": "method_id",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "brand",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "last4",
+          "type_annotation": "str",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "exp_month",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         },
+         {
+          "name": "exp_year",
+          "type_annotation": "int",
+          "is_required": true,
+          "default_value": null
+         }
+        ]
+       }
+      ],
+      "files": [
+       "main.py",
+       "models.py"
+      ]
+     }
+    },
+    "team_id": "team-payments-platform-team",
+    "service_id": null,
+    "file_path": null,
+    "status": "active"
+   },
+   "blueprint": {
+    "service_id": "payment-service",
+    "name": "payment-service",
+    "mission": "Payment Platform Service API",
+    "tech_stack": [
+     "FastAPI",
+     "Pydantic",
+     "Apache Kafka",
+     "Async Event Bus",
+     "Python 3.13"
+    ],
+    "execution_pipeline": [
+     {
+      "step_number": 1,
+      "title": "Route: POST /v2/charges",
+      "description": "Processes credit card authorization and capture. Validates parameters: charge.",
+      "component": "FastAPI Route Handler"
+     },
+     {
+      "step_number": 2,
+      "title": "Route: POST /v2/refunds/async",
+      "description": "Asynchronously initiates customer refund. Validates parameters: refund, x_idempotency_key.",
+      "component": "FastAPI Route Handler"
+     },
+     {
+      "step_number": 3,
+      "title": "Asynchronous Event Streaming",
+      "description": "Emits event payload to topic 'payment.refund.initiated' for background processing.",
+      "component": "Kafka Event Bus"
+     },
+     {
+      "step_number": 4,
+      "title": "Route: GET /v2/transactions/{transaction_id}",
+      "description": "Fetches transaction ledger status from database. Validates parameters: transaction_id.",
+      "component": "FastAPI Route Handler"
+     }
+    ],
+    "models": [
+     {
+      "name": "ChargeRequest",
+      "docstring": null,
+      "fields": [
+       {
+        "name": "account_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "amount_cents",
+        "type_annotation": "int",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "currency",
+        "type_annotation": "str",
+        "is_required": false,
+        "default_value": "'USD'"
+       },
+       {
+        "name": "token",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       }
+      ]
+     },
+     {
+      "name": "RefundRequest",
+      "docstring": null,
+      "fields": [
+       {
+        "name": "order_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "amount_cents",
+        "type_annotation": "int",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "currency",
+        "type_annotation": "str",
+        "is_required": false,
+        "default_value": "'USD'"
+       },
+       {
+        "name": "reason",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "manager_approval",
+        "type_annotation": "Optional[bool]",
+        "is_required": false,
+        "default_value": "False"
+       }
+      ]
+     },
+     {
+      "name": "LedgerEntry",
+      "docstring": null,
+      "fields": [
+       {
+        "name": "entry_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "account_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "amount_cents",
+        "type_annotation": "int",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "entry_type",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "timestamp",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       }
+      ]
+     },
+     {
+      "name": "PaymentMethod",
+      "docstring": null,
+      "fields": [
+       {
+        "name": "method_id",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "brand",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "last4",
+        "type_annotation": "str",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "exp_month",
+        "type_annotation": "int",
+        "is_required": true,
+        "default_value": null
+       },
+       {
+        "name": "exp_year",
+        "type_annotation": "int",
+        "is_required": true,
+        "default_value": null
+       }
+      ]
+     }
+    ],
+    "files": [
+     "main.py",
+     "models.py"
+    ]
+   },
+   "service_files": {
+    "main.py": "\"\"\"\nPayment Platform Service API\nOwner: Payments Platform Team (#payments-core)\nRepository: stavvros-workspace/services/payment-service\n\"\"\"\n\nfrom fastapi import FastAPI, Header, HTTPException, status\nfrom pydantic import BaseModel\nfrom typing import Optional\n\napp = FastAPI(title=\"Payment Platform Service\", version=\"2.1.0\")\n\nclass ChargeRequest(BaseModel):\n    account_id: str\n    amount_cents: int\n    currency: str = \"USD\"\n    token: str\n\nclass RefundRequest(BaseModel):\n    order_id: str\n    amount_cents: int\n    currency: str = \"USD\"\n    reason: str\n    manager_approval: Optional[bool] = False\n\n@app.post(\"/v2/charges\")\ndef create_charge(charge: ChargeRequest):\n    \"\"\"Processes credit card authorization and capture.\"\"\"\n    return {\"charge_id\": \"ch_554129\", \"status\": \"CAPTURED\", \"amount_cents\": charge.amount_cents}\n\n@app.post(\"/v2/refunds/async\", status_code=status.HTTP_202_ACCEPTED)\ndef initiate_refund_async(refund: RefundRequest, x_idempotency_key: str = Header(...)):\n    \"\"\"\n    Asynchronously initiates customer refund.\n    NOTE: Migrated from legacy /v1/refunds (synchronous) to /v2/refunds/async.\n    Emits Kafka event 'payment.refund.initiated' for background processing.\n    \"\"\"\n    # Event bus dispatch simulation: kafka_producer.send(\"payment.refund.initiated\", payload)\n    return {\n        \"refund_id\": f\"ref_async_{refund.order_id}\",\n        \"status\": \"ACCEPTED_FOR_PROCESSING\",\n        \"protocol\": \"kafka_event_stream\",\n        \"idempotency_key\": x_idempotency_key\n    }\n\n@app.get(\"/v2/transactions/{transaction_id}\")\ndef get_transaction_status(transaction_id: str):\n    \"\"\"Fetches transaction ledger status from database.\"\"\"\n    return {\"transaction_id\": transaction_id, \"state\": \"SETTLED\"}\n",
+    "models.py": "\"\"\"\nData schemas for Payment Platform Service\n\"\"\"\n\nfrom pydantic import BaseModel\nfrom typing import Optional\n\nclass LedgerEntry(BaseModel):\n    entry_id: str\n    account_id: str\n    amount_cents: int\n    entry_type: str  # CREDIT or DEBIT\n    timestamp: str\n\nclass PaymentMethod(BaseModel):\n    method_id: str\n    brand: str\n    last4: str\n    exp_month: int\n    exp_year: int\n"
+   },
+   "drift_alerts": [
+    {
+     "id": "alert-ver-contract-PRD-2025-Refund-Policy-POST-_v1_refunds-api-payment-service-POST-_v2_refunds_async",
+     "rule_id": "DRIFT-001-VERSION",
+     "evaluator_origin": "ast_rule",
+     "severity": "critical",
+     "title": "Endpoint Version Drift: /v1/refunds \u2794 /v2/refunds/async",
+     "doc_spec": "Doc line 55: specifies 'POST /v1/refunds'",
+     "code_reality": "Code stavvros-workspace/services/payment-service/main.py:32: implements 'POST /v2/refunds/async' (status: 202)",
+     "doc_id": "PRD-2025-Refund-Policy",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-POST-_v2_refunds_async",
+     "suggested_patch": "Update stavvros-workspace/docs/PRD-2025-Refund-Policy.md (line 55) to reference 'POST /v2/refunds/async'",
+     "status": "open"
+    },
+    {
+     "id": "alert-ver-contract-Architecture-Payments-GET-_v2_transactions_{id}-api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "rule_id": "DRIFT-001-VERSION",
+     "evaluator_origin": "ast_rule",
+     "severity": "critical",
+     "title": "Endpoint Version Drift: /v2/transactions/{id} \u2794 /v2/transactions/{transaction_id}",
+     "doc_spec": "Doc line 26: specifies 'GET /v2/transactions/{id}'",
+     "code_reality": "Code stavvros-workspace/services/payment-service/main.py:47: implements 'GET /v2/transactions/{transaction_id}' (status: 200)",
+     "doc_id": "Architecture-Payments",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "suggested_patch": "Update stavvros-workspace/docs/Architecture-Payments.md (line 26) to reference 'GET /v2/transactions/{transaction_id}'",
+     "status": "open"
+    },
+    {
+     "id": "alert-phantom-contract-Architecture-Payments-GET-_v2_transactions_{id}",
+     "rule_id": "DRIFT-003-PHANTOM",
+     "evaluator_origin": "ast_rule",
+     "severity": "warning",
+     "title": "Phantom Specification: GET /v2/transactions/{id}",
+     "doc_spec": "Doc line 26: specifies 'GET /v2/transactions/{id}'.",
+     "code_reality": "No route implementing this contract found in any active service codebase.",
+     "doc_id": "Architecture-Payments",
+     "service_id": "payment-service",
+     "api_id": null,
+     "suggested_patch": "Implement this route or remove obsolete specification from planning document.",
+     "status": "open"
+    },
+    {
+     "id": "alert-undoc-api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "rule_id": "DRIFT-004-UNDOCUMENTED",
+     "evaluator_origin": "ast_rule",
+     "severity": "warning",
+     "title": "Undocumented Route: GET /v2/transactions/{transaction_id}",
+     "doc_spec": "No planning document or PRD references this endpoint.",
+     "code_reality": "Declared at stavvros-workspace/services/payment-service/main.py:47.",
+     "doc_id": "none",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "suggested_patch": "Add specification section for 'GET /v2/transactions/{transaction_id}' in service documentation.",
+     "status": "open"
+    }
+   ]
+  },
+  "doc-PRD-2025-Refund-Policy": {
+   "node": {
+    "id": "doc-PRD-2025-Refund-Policy",
+    "label": "PRD: Self-Service Customer Refund Policy & Workflow",
+    "subtitle": "\ud83d\udcc4 FleetHD PRD Spec",
+    "type": "document",
+    "properties": {
+     "objective": "Enable verified customers to initiate self-service refunds directly within the online store checkout and order history portal within 30 days of purchase, reducing tier-1 customer support ticket volume by 40%. ---",
+     "scope_in": [
+      "Full and partial refunds for credit card, debit card, and digital wallet purchases.",
+      "Validation of 30-day return window from order delivery timestamp.",
+      "Direct automated ledger reversal and customer receipt email notifications.",
+      "Idempotent request handling via client-generated `X-Idempotency-Key`."
+     ],
+     "scope_out": [
+      "Cash-on-delivery or in-store cash payouts.",
+      "Physical parcel return tracking (handled by Logistics Service).",
+      "Cryptographic or third-party gift voucher balance reloads.",
+      ""
+     ],
+     "success_criteria": [
+      "Performance**: P99 response time for refund initiation must be under 250ms.",
+      "Availability**: 99.95% uptime on the refund processing endpoint.",
+      "Accuracy**: 100% reconciliation match between checkout refund state and payment ledger.",
+      "Security**: Mandatory TLS 1.3 and JWT signature verification on all requests.",
+      ""
+     ],
+     "technical_changes": [
+      "### Target Service",
+      "- **Service Name**: `payment-service`",
+      "- **Owner**: Payments Platform Team",
+      "- **Repository**: `stavvros-workspace/services/payment-service`",
+      "### API Specifications",
+      "The checkout service will invoke the payment service refund endpoint:",
+      "- **HTTP Method**: `POST`",
+      "- **Endpoint**: `/v1/refunds`",
+      "- **Communication Protocol**: Synchronous REST HTTP 200 OK",
+      "- **Request Headers**:",
+      "- `Content-Type: application/json`",
+      "- `X-Idempotency-Key: <UUID>`",
+      "- **Request Payload**:",
+      "```json",
+      "{",
+      "\"order_id\": \"ord_98741\",",
+      "\"amount_cents\": 4999,",
+      "\"currency\": \"USD\",",
+      "\"reason\": \"customer_return\",",
+      "\"manager_approval\": false",
+      "}",
+      "```",
+      "- **Response**: Synchronous JSON payload with `refund_id` and status `COMPLETED`."
+     ]
+    },
+    "team_id": "team-checkout-team",
+    "service_id": null,
+    "file_path": "stavvros-workspace/docs/PRD-2025-Refund-Policy.md",
+    "status": "active"
+   },
+   "spec": {
+    "id": "PRD-2025-Refund-Policy",
+    "title": "PRD: Self-Service Customer Refund Policy & Workflow",
+    "doc_path": "stavvros-workspace/docs/PRD-2025-Refund-Policy.md",
+    "owning_team": "Checkout Team (#checkout-devs)",
+    "collaborating_team": "Payments Platform Team (#payments-core)",
+    "objective": "Enable verified customers to initiate self-service refunds directly within the online store checkout and order history portal within 30 days of purchase, reducing tier-1 customer support ticket volume by 40%. ---",
+    "user_stories": [
+     "US-1**: As a customer viewing a delivered order, I want to click a \"Request Refund\" button so that I can return an eligible item without contacting support.",
+     "US-2**: As a customer, I want to see instant confirmation of my refund amount and payment ledger credit so I know when funds will arrive.",
+     "US-3**: As a finance administrator, I want high-value refunds (> $500) routed to a manager queue before execution.",
+     ""
+    ],
+    "scope_in": [
+     "Full and partial refunds for credit card, debit card, and digital wallet purchases.",
+     "Validation of 30-day return window from order delivery timestamp.",
+     "Direct automated ledger reversal and customer receipt email notifications.",
+     "Idempotent request handling via client-generated `X-Idempotency-Key`."
+    ],
+    "scope_out": [
+     "Cash-on-delivery or in-store cash payouts.",
+     "Physical parcel return tracking (handled by Logistics Service).",
+     "Cryptographic or third-party gift voucher balance reloads.",
+     ""
+    ],
+    "success_criteria": [
+     "Performance**: P99 response time for refund initiation must be under 250ms.",
+     "Availability**: 99.95% uptime on the refund processing endpoint.",
+     "Accuracy**: 100% reconciliation match between checkout refund state and payment ledger.",
+     "Security**: Mandatory TLS 1.3 and JWT signature verification on all requests.",
+     ""
+    ],
+    "technical_changes": [
+     "### Target Service",
+     "- **Service Name**: `payment-service`",
+     "- **Owner**: Payments Platform Team",
+     "- **Repository**: `stavvros-workspace/services/payment-service`",
+     "### API Specifications",
+     "The checkout service will invoke the payment service refund endpoint:",
+     "- **HTTP Method**: `POST`",
+     "- **Endpoint**: `/v1/refunds`",
+     "- **Communication Protocol**: Synchronous REST HTTP 200 OK",
+     "- **Request Headers**:",
+     "- `Content-Type: application/json`",
+     "- `X-Idempotency-Key: <UUID>`",
+     "- **Request Payload**:",
+     "```json",
+     "{",
+     "\"order_id\": \"ord_98741\",",
+     "\"amount_cents\": 4999,",
+     "\"currency\": \"USD\",",
+     "\"reason\": \"customer_return\",",
+     "\"manager_approval\": false",
+     "}",
+     "```",
+     "- **Response**: Synchronous JSON payload with `refund_id` and status `COMPLETED`."
+    ],
+    "raw_markdown": "# PRD: Self-Service Customer Refund Policy & Workflow\n\n**Document ID**: PRD-2025-REFUND  \n**Version**: 1.2  \n**Owning Team**: Checkout Team (#checkout-devs)  \n**Collaborating Team**: Payments Platform Team (#payments-core)  \n**Target Release**: Q2 2025  \n\n---\n\n## 1. Objective\nEnable verified customers to initiate self-service refunds directly within the online store checkout and order history portal within 30 days of purchase, reducing tier-1 customer support ticket volume by 40%.\n\n---\n\n## 2. User Stories\n- **US-1**: As a customer viewing a delivered order, I want to click a \"Request Refund\" button so that I can return an eligible item without contacting support.\n- **US-2**: As a customer, I want to see instant confirmation of my refund amount and payment ledger credit so I know when funds will arrive.\n- **US-3**: As a finance administrator, I want high-value refunds (> $500) routed to a manager queue before execution.\n\n---\n\n## 3. Scope Boundaries (Prevent Agent Wandering)\n\n### In Scope\n- Full and partial refunds for credit card, debit card, and digital wallet purchases.\n- Validation of 30-day return window from order delivery timestamp.\n- Direct automated ledger reversal and customer receipt email notifications.\n- Idempotent request handling via client-generated `X-Idempotency-Key`.\n\n### Out of Scope\n- Cash-on-delivery or in-store cash payouts.\n- Physical parcel return tracking (handled by Logistics Service).\n- Cryptographic or third-party gift voucher balance reloads.\n\n---\n\n## 4. Success Criteria\n1. **Performance**: P99 response time for refund initiation must be under 250ms.\n2. **Availability**: 99.95% uptime on the refund processing endpoint.\n3. **Accuracy**: 100% reconciliation match between checkout refund state and payment ledger.\n4. **Security**: Mandatory TLS 1.3 and JWT signature verification on all requests.\n\n---\n\n## 5. Technical Changes & Architecture\n\n### Target Service\n- **Service Name**: `payment-service`\n- **Owner**: Payments Platform Team\n- **Repository**: `stavvros-workspace/services/payment-service`\n\n### API Specifications\nThe checkout service will invoke the payment service refund endpoint:\n- **HTTP Method**: `POST`\n- **Endpoint**: `/v1/refunds`\n- **Communication Protocol**: Synchronous REST HTTP 200 OK\n- **Request Headers**:\n  - `Content-Type: application/json`\n  - `X-Idempotency-Key: <UUID>`\n- **Request Payload**:\n  ```json\n  {\n    \"order_id\": \"ord_98741\",\n    \"amount_cents\": 4999,\n    \"currency\": \"USD\",\n    \"reason\": \"customer_return\",\n    \"manager_approval\": false\n  }\n  ```\n- **Response**: Synchronous JSON payload with `refund_id` and status `COMPLETED`.\n"
+   },
+   "drift_alerts": [
+    {
+     "id": "alert-ver-contract-PRD-2025-Refund-Policy-POST-_v1_refunds-api-payment-service-POST-_v2_refunds_async",
+     "rule_id": "DRIFT-001-VERSION",
+     "evaluator_origin": "ast_rule",
+     "severity": "critical",
+     "title": "Endpoint Version Drift: /v1/refunds \u2794 /v2/refunds/async",
+     "doc_spec": "Doc line 55: specifies 'POST /v1/refunds'",
+     "code_reality": "Code stavvros-workspace/services/payment-service/main.py:32: implements 'POST /v2/refunds/async' (status: 202)",
+     "doc_id": "PRD-2025-Refund-Policy",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-POST-_v2_refunds_async",
+     "suggested_patch": "Update stavvros-workspace/docs/PRD-2025-Refund-Policy.md (line 55) to reference 'POST /v2/refunds/async'",
+     "status": "open"
+    }
+   ]
+  },
+  "doc-Architecture-Payments": {
+   "node": {
+    "id": "doc-Architecture-Payments",
+    "label": "Architecture Specification: Payments & Checkout System Boundaries",
+    "subtitle": "\ud83d\udcc4 Architecture Spec",
+    "type": "document",
+    "properties": {
+     "objective": "",
+     "scope_in": [],
+     "scope_out": [],
+     "success_criteria": [],
+     "technical_changes": []
+    },
+    "team_id": "team-payments-platform-team",
+    "service_id": null,
+    "file_path": "stavvros-workspace/docs/Architecture-Payments.md",
+    "status": "active"
+   },
+   "spec": {
+    "id": "Architecture-Payments",
+    "title": "Architecture Specification: Payments & Checkout System Boundaries",
+    "doc_path": "stavvros-workspace/docs/Architecture-Payments.md",
+    "owning_team": "Payments Platform Team (#payments-core)",
+    "collaborating_team": null,
+    "objective": "",
+    "user_stories": [],
+    "scope_in": [],
+    "scope_out": [],
+    "success_criteria": [],
+    "technical_changes": [],
+    "raw_markdown": "# Architecture Specification: Payments & Checkout System Boundaries\n\n**Document ID**: ARCH-PAYMENTS-2025  \n**Owning Team**: Payments Platform Team (#payments-core)  \n**Status**: Active  \n\n---\n\n## 1. System Overview\nThe Payments Platform acts as the centralized accounting, processor abstraction (Stripe, Adyen), and ledger management gateway for the company. Downstream systems (such as `checkout-service` and `subscription-service`) must interact with the Payments Platform via defined public APIs.\n\n---\n\n## 2. Core Services\n- **Checkout Service (`checkout-service`)**:\n  - Owned by: Checkout Team\n  - Responsibilities: Cart state, discount application, shipping address validation, order placement.\n  - Dependencies: Invokes `payment-service` to authorize payments and initiate refunds.\n\n- **Payment Service (`payment-service`)**:\n  - Owned by: Payments Platform Team\n  - Responsibilities: Card tokenization, merchant gateway dispatch, transaction ledger, compliance logging.\n  - Exposed Routes:\n    - `POST /v2/charges`: Authorize and capture customer charge.\n    - `POST /v2/refunds/async`: Asynchronously initiate refund with Kafka event dispatch.\n    - `GET /v2/transactions/{id}`: Query transaction ledger status.\n\n---\n\n## 3. Communication Patterns\nAll write-intensive payment and refund operations must use asynchronous idempotency workers via Kafka event bus `payment.events` to prevent database locking during high-traffic flash sales.\n"
+   },
+   "drift_alerts": [
+    {
+     "id": "alert-ver-contract-Architecture-Payments-GET-_v2_transactions_{id}-api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "rule_id": "DRIFT-001-VERSION",
+     "evaluator_origin": "ast_rule",
+     "severity": "critical",
+     "title": "Endpoint Version Drift: /v2/transactions/{id} \u2794 /v2/transactions/{transaction_id}",
+     "doc_spec": "Doc line 26: specifies 'GET /v2/transactions/{id}'",
+     "code_reality": "Code stavvros-workspace/services/payment-service/main.py:47: implements 'GET /v2/transactions/{transaction_id}' (status: 200)",
+     "doc_id": "Architecture-Payments",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "suggested_patch": "Update stavvros-workspace/docs/Architecture-Payments.md (line 26) to reference 'GET /v2/transactions/{transaction_id}'",
+     "status": "open"
+    },
+    {
+     "id": "alert-phantom-contract-Architecture-Payments-GET-_v2_transactions_{id}",
+     "rule_id": "DRIFT-003-PHANTOM",
+     "evaluator_origin": "ast_rule",
+     "severity": "warning",
+     "title": "Phantom Specification: GET /v2/transactions/{id}",
+     "doc_spec": "Doc line 26: specifies 'GET /v2/transactions/{id}'.",
+     "code_reality": "No route implementing this contract found in any active service codebase.",
+     "doc_id": "Architecture-Payments",
+     "service_id": "payment-service",
+     "api_id": null,
+     "suggested_patch": "Implement this route or remove obsolete specification from planning document.",
+     "status": "open"
+    }
+   ]
+  },
+  "api-checkout-service-POST-_api_checkout_cart": {
+   "node": {
+    "id": "api-checkout-service-POST-_api_checkout_cart",
+    "label": "POST /api/checkout/cart",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "submit_cart",
+     "line_number": 24,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "checkout-service",
+    "file_path": "stavvros-workspace/services/checkout-service/main.py",
+    "status": "active"
+   },
+   "code_snippet": "    currency: str = \"USD\"\n\n@app.post(\"/api/checkout/cart\")\ndef submit_cart(request: CheckoutRequest):\n    \"\"\"Submits customer shopping cart for checkout processing.\"\"\"\n    total = sum(i.price_cents * i.quantity for i in request.items)\n    return {\"status\": \"CHECKOUT_INITIATED\", \"cart_id\": request.cart_id, \"total_cents\": total}\n\n@app.get(\"/api/checkout/orders/{order_id}\")\ndef get_order(order_id: str):\n    \"\"\"Retrieves order summary and eligibility status for returns.\"\"\"\n    return {\"order_id\": order_id, \"status\": \"DELIVERED\", \"eligible_for_refund\": True}\n\n@app.post(\"/api/checkout/request-refund\")\ndef trigger_refund(order_id: str, amount_cents: int, reason: str):\n    \"\"\"\n    Triggers refund workflow by calling the Payments Platform.\n    Note: Depends on payment-service to process money movements.\n    \"\"\"\n",
+   "drift_alerts": [
+    {
+     "id": "alert-undoc-api-checkout-service-POST-_api_checkout_cart",
+     "rule_id": "DRIFT-004-UNDOCUMENTED",
+     "evaluator_origin": "ast_rule",
+     "severity": "warning",
+     "title": "Undocumented Route: POST /api/checkout/cart",
+     "doc_spec": "No planning document or PRD references this endpoint.",
+     "code_reality": "Declared at stavvros-workspace/services/checkout-service/main.py:24.",
+     "doc_id": "none",
+     "service_id": "checkout-service",
+     "api_id": "api-checkout-service-POST-_api_checkout_cart",
+     "suggested_patch": "Add specification section for 'POST /api/checkout/cart' in service documentation.",
+     "status": "open"
+    }
+   ]
+  },
+  "api-checkout-service-GET-_api_checkout_orders_{order_id}": {
+   "node": {
+    "id": "api-checkout-service-GET-_api_checkout_orders_{order_id}",
+    "label": "GET /api/checkout/orders/{order_id}",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "get_order",
+     "line_number": 30,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "checkout-service",
+    "file_path": "stavvros-workspace/services/checkout-service/main.py",
+    "status": "active"
+   },
+   "code_snippet": "    return {\"status\": \"CHECKOUT_INITIATED\", \"cart_id\": request.cart_id, \"total_cents\": total}\n\n@app.get(\"/api/checkout/orders/{order_id}\")\ndef get_order(order_id: str):\n    \"\"\"Retrieves order summary and eligibility status for returns.\"\"\"\n    return {\"order_id\": order_id, \"status\": \"DELIVERED\", \"eligible_for_refund\": True}\n\n@app.post(\"/api/checkout/request-refund\")\ndef trigger_refund(order_id: str, amount_cents: int, reason: str):\n    \"\"\"\n    Triggers refund workflow by calling the Payments Platform.\n    Note: Depends on payment-service to process money movements.\n    \"\"\"\n    from client import PaymentClient\n    client = PaymentClient()\n    result = client.invoke_refund(order_id=order_id, amount_cents=amount_cents, reason=reason)\n    return {\"order_id\": order_id, \"refund_status\": result}\n",
+   "drift_alerts": []
+  },
+  "api-checkout-service-POST-_api_checkout_request-refund": {
+   "node": {
+    "id": "api-checkout-service-POST-_api_checkout_request-refund",
+    "label": "POST /api/checkout/request-refund",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "trigger_refund",
+     "line_number": 35,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "checkout-service",
+    "file_path": "stavvros-workspace/services/checkout-service/main.py",
+    "status": "active"
+   },
+   "code_snippet": "    return {\"order_id\": order_id, \"status\": \"DELIVERED\", \"eligible_for_refund\": True}\n\n@app.post(\"/api/checkout/request-refund\")\ndef trigger_refund(order_id: str, amount_cents: int, reason: str):\n    \"\"\"\n    Triggers refund workflow by calling the Payments Platform.\n    Note: Depends on payment-service to process money movements.\n    \"\"\"\n    from client import PaymentClient\n    client = PaymentClient()\n    result = client.invoke_refund(order_id=order_id, amount_cents=amount_cents, reason=reason)\n    return {\"order_id\": order_id, \"refund_status\": result}\n",
+   "drift_alerts": []
+  },
+  "api-payment-service-POST-_v2_charges": {
+   "node": {
+    "id": "api-payment-service-POST-_v2_charges",
+    "label": "POST /v2/charges",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "create_charge",
+     "line_number": 27,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "payment-service",
+    "file_path": "stavvros-workspace/services/payment-service/main.py",
+    "status": "active"
+   },
+   "code_snippet": "    manager_approval: Optional[bool] = False\n\n@app.post(\"/v2/charges\")\ndef create_charge(charge: ChargeRequest):\n    \"\"\"Processes credit card authorization and capture.\"\"\"\n    return {\"charge_id\": \"ch_554129\", \"status\": \"CAPTURED\", \"amount_cents\": charge.amount_cents}\n\n@app.post(\"/v2/refunds/async\", status_code=status.HTTP_202_ACCEPTED)\ndef initiate_refund_async(refund: RefundRequest, x_idempotency_key: str = Header(...)):\n    \"\"\"\n    Asynchronously initiates customer refund.\n    NOTE: Migrated from legacy /v1/refunds (synchronous) to /v2/refunds/async.\n    Emits Kafka event 'payment.refund.initiated' for background processing.\n    \"\"\"\n    # Event bus dispatch simulation: kafka_producer.send(\"payment.refund.initiated\", payload)\n    return {\n        \"refund_id\": f\"ref_async_{refund.order_id}\",\n        \"status\": \"ACCEPTED_FOR_PROCESSING\",\n        \"protocol\": \"kafka_event_stream\",\n",
+   "drift_alerts": []
+  },
+  "api-payment-service-POST-_v2_refunds_async": {
+   "node": {
+    "id": "api-payment-service-POST-_v2_refunds_async",
+    "label": "POST /v2/refunds/async",
+    "subtitle": "HTTP 202 \u2022 Async Event",
+    "type": "api",
+    "properties": {
+     "handler": "initiate_refund_async",
+     "line_number": 32,
+     "is_async": true,
+     "status_code": 202,
+     "event_topic": "payment.refund.initiated"
+    },
+    "team_id": null,
+    "service_id": "payment-service",
+    "file_path": "stavvros-workspace/services/payment-service/main.py",
+    "status": "active"
+   },
+   "code_snippet": "    return {\"charge_id\": \"ch_554129\", \"status\": \"CAPTURED\", \"amount_cents\": charge.amount_cents}\n\n@app.post(\"/v2/refunds/async\", status_code=status.HTTP_202_ACCEPTED)\ndef initiate_refund_async(refund: RefundRequest, x_idempotency_key: str = Header(...)):\n    \"\"\"\n    Asynchronously initiates customer refund.\n    NOTE: Migrated from legacy /v1/refunds (synchronous) to /v2/refunds/async.\n    Emits Kafka event 'payment.refund.initiated' for background processing.\n    \"\"\"\n    # Event bus dispatch simulation: kafka_producer.send(\"payment.refund.initiated\", payload)\n    return {\n        \"refund_id\": f\"ref_async_{refund.order_id}\",\n        \"status\": \"ACCEPTED_FOR_PROCESSING\",\n        \"protocol\": \"kafka_event_stream\",\n        \"idempotency_key\": x_idempotency_key\n    }\n\n@app.get(\"/v2/transactions/{transaction_id}\")\ndef get_transaction_status(transaction_id: str):\n",
+   "drift_alerts": [
+    {
+     "id": "alert-ver-contract-PRD-2025-Refund-Policy-POST-_v1_refunds-api-payment-service-POST-_v2_refunds_async",
+     "rule_id": "DRIFT-001-VERSION",
+     "evaluator_origin": "ast_rule",
+     "severity": "critical",
+     "title": "Endpoint Version Drift: /v1/refunds \u2794 /v2/refunds/async",
+     "doc_spec": "Doc line 55: specifies 'POST /v1/refunds'",
+     "code_reality": "Code stavvros-workspace/services/payment-service/main.py:32: implements 'POST /v2/refunds/async' (status: 202)",
+     "doc_id": "PRD-2025-Refund-Policy",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-POST-_v2_refunds_async",
+     "suggested_patch": "Update stavvros-workspace/docs/PRD-2025-Refund-Policy.md (line 55) to reference 'POST /v2/refunds/async'",
+     "status": "open"
+    }
+   ]
+  },
+  "api-payment-service-GET-_v2_transactions_{transaction_id}": {
+   "node": {
+    "id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+    "label": "GET /v2/transactions/{transaction_id}",
+    "subtitle": "HTTP 200 \u2022 Sync REST",
+    "type": "api",
+    "properties": {
+     "handler": "get_transaction_status",
+     "line_number": 47,
+     "is_async": false,
+     "status_code": 200,
+     "event_topic": null
+    },
+    "team_id": null,
+    "service_id": "payment-service",
+    "file_path": "stavvros-workspace/services/payment-service/main.py",
+    "status": "active"
+   },
+   "code_snippet": "    }\n\n@app.get(\"/v2/transactions/{transaction_id}\")\ndef get_transaction_status(transaction_id: str):\n    \"\"\"Fetches transaction ledger status from database.\"\"\"\n    return {\"transaction_id\": transaction_id, \"state\": \"SETTLED\"}\n",
+   "drift_alerts": [
+    {
+     "id": "alert-ver-contract-Architecture-Payments-GET-_v2_transactions_{id}-api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "rule_id": "DRIFT-001-VERSION",
+     "evaluator_origin": "ast_rule",
+     "severity": "critical",
+     "title": "Endpoint Version Drift: /v2/transactions/{id} \u2794 /v2/transactions/{transaction_id}",
+     "doc_spec": "Doc line 26: specifies 'GET /v2/transactions/{id}'",
+     "code_reality": "Code stavvros-workspace/services/payment-service/main.py:47: implements 'GET /v2/transactions/{transaction_id}' (status: 200)",
+     "doc_id": "Architecture-Payments",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "suggested_patch": "Update stavvros-workspace/docs/Architecture-Payments.md (line 26) to reference 'GET /v2/transactions/{transaction_id}'",
+     "status": "open"
+    },
+    {
+     "id": "alert-undoc-api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "rule_id": "DRIFT-004-UNDOCUMENTED",
+     "evaluator_origin": "ast_rule",
+     "severity": "warning",
+     "title": "Undocumented Route: GET /v2/transactions/{transaction_id}",
+     "doc_spec": "No planning document or PRD references this endpoint.",
+     "code_reality": "Declared at stavvros-workspace/services/payment-service/main.py:47.",
+     "doc_id": "none",
+     "service_id": "payment-service",
+     "api_id": "api-payment-service-GET-_v2_transactions_{transaction_id}",
+     "suggested_patch": "Add specification section for 'GET /v2/transactions/{transaction_id}' in service documentation.",
+     "status": "open"
+    }
+   ]
+  }
+ }
+}

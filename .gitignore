@@ -1,0 +1,12 @@
+.DS_Store
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+.env
+.env.*
+# runtime state (decisions + pristine copy of acme-shop)
+.stavvros-data/

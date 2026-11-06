@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stavvros Drift UX</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Kalam:wght@400;700&display=swap">
+<style>
+/* Layout: a single reading column for the story, widening into full-bleed horizontal strips for storyboards and the wireflow. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --panel:#FCFCFA; --ink:#17202C; --muted:#5A6675; --line:#D3D9E1;
+  --accent:#2C5A88; --accent-soft:#E3ECF6;
+  --drift:#C2570C; --drift-soft:#FBEBDD; --crit:#B42318; --crit-soft:#FBE4E1; --ok:#1E7B4F; --ok-soft:#DFF2E7; --warn:#966A10; --warn-soft:#F7EDD4;
+  --code:#EEF1F5; --del:#FBE4E1; --add:#DFF2E7;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --f-sketch:"Kalam", "Comic Sans MS", "Segoe Print", cursive;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F141B; --surface:#171E27; --panel:#1B232D; --ink:#E5EAF0; --muted:#97A3B3; --line:#2B3644;
+  --accent:#86AEDB; --accent-soft:#1F2D3D;
+  --drift:#F08A4B; --drift-soft:#3A2617; --crit:#F27A70; --crit-soft:#3B1D1B; --ok:#5DC28E; --ok-soft:#173225; --warn:#E1B45A; --warn-soft:#33291A;
+  --code:#121820; --del:#3B1D1B; --add:#173225; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F141B; --surface:#171E27; --panel:#1B232D; --ink:#E5EAF0; --muted:#97A3B3; --line:#2B3644;
+  --accent:#86AEDB; --accent-soft:#1F2D3D;
+  --drift:#F08A4B; --drift-soft:#3A2617; --crit:#F27A70; --crit-soft:#3B1D1B; --ok:#5DC28E; --ok-soft:#173225; --warn:#E1B45A; --warn-soft:#33291A;
+  --code:#121820; --del:#3B1D1B; --add:#173225; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+.prose{max-width:68ch}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(30px,4.6vw,46px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:26px;font-weight:700}
+h3{font-size:19px;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:17px;color:var(--muted);margin-top:14px}
+header{display:flex;flex-direction:column;gap:10px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:18px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+section{display:flex;flex-direction:column;gap:22px}
+.sec-head{display:flex;flex-direction:column;gap:8px}
+
+/* Storyboards */
+.board{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.board-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.persona{font-family:var(--f-mono);font-size:12px;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.scenario{color:var(--muted);max-width:90ch}
+.strip-scroll{overflow-x:auto;padding-bottom:4px}
+.strip{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:12px;min-width:1040px}
+.frame{display:flex;flex-direction:column;gap:8px;min-width:0}
+.frame svg{width:100%;height:auto;display:block}
+.cap{font-family:var(--f-sketch);font-size:15px;line-height:1.35}
+.cap b{font-family:var(--f-body);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-right:4px}
+.mood{font-family:var(--f-mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.mood i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.curve{width:100%;height:46px;display:block}
+.curve-wrap{position:relative;min-width:1040px}
+.curve-label{position:absolute;left:0;top:-2px;font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+
+/* SVG theme hooks */
+.s-frame{fill:var(--panel);stroke:var(--ink);stroke-width:1.6}
+.s-ink{stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.s-fillink{fill:var(--ink)}
+.s-monitor{fill:var(--surface);stroke:var(--ink);stroke-width:1.8}
+.s-text{fill:var(--ink);font-family:var(--f-mono);font-size:8.6px}
+.s-title{fill:#fff;font-family:var(--f-mono);font-size:8px;font-weight:500}
+.s-bubble{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+.s-btext{fill:var(--ink);font-family:var(--f-sketch);font-size:11.5px}
+.t-neutral{fill:var(--muted)} .t-alert{fill:var(--crit)} .t-warn{fill:var(--drift)} .t-ok{fill:var(--ok)} .t-info{fill:var(--accent)}
+.s-head{fill:var(--panel);stroke:var(--ink);stroke-width:2}
+
+/* Wireflow */
+.flow-scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px}
+.flow{display:flex;align-items:center;gap:0;width:max-content}
+.col{display:flex;flex-direction:column;gap:22px}
+.entry{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.arrow{width:120px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 6px;text-align:center}
+.arrow svg{width:100%;height:20px}
+.arrow .lbl{font-size:12px;color:var(--ink);line-height:1.3}
+.arrow .lbl .n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--surface);font-size:11px;font-weight:600;margin-right:4px}
+.screen{width:340px;background:var(--surface);border:1.5px solid var(--ink);border-radius:8px;overflow:hidden;font-size:12.5px;line-height:1.45;transition:box-shadow .3s}
+.screen.flash{box-shadow:0 0 0 4px var(--accent)}
+.chrome{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--code);font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.chrome .dots{display:flex;gap:4px}.chrome .dots i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block}
+.sid{margin-left:auto;font-weight:500;color:var(--ink)}
+.body{padding:12px;display:flex;flex-direction:column;gap:10px}
+.msg-user{align-self:flex-end;background:var(--accent-soft);padding:6px 10px;border-radius:10px 10px 2px 10px;max-width:85%}
+.msg-ai{color:var(--muted)}
+.card{border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.card.drift{border-color:var(--drift);background:var(--drift-soft)}
+.card.ok{border-color:var(--ok);background:var(--ok-soft)}
+.card .t{font-weight:600}
+code,.mono{font-family:var(--f-mono);font-size:11.5px}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:inherit;font-size:12px;padding:5px 10px;border-radius:5px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);cursor:default}
+.btn.primary{background:var(--ink);color:var(--surface)}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+.hot{position:relative;cursor:pointer;outline:2px dashed var(--accent);outline-offset:2px}
+.hot:focus-visible{outline:3px solid var(--accent)}
+.hot .mk{position:absolute;top:-10px;right:-10px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--surface);font:600 11px/20px var(--f-body);text-align:center}
+.tabs{display:flex;gap:12px;font-size:12px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.tabs .on{font-weight:600;border-bottom:2px solid var(--ink);padding-bottom:5px;margin-bottom:-7px}
+.row{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;padding:8px;border:1px solid var(--line);border-radius:6px}
+.row .meta{grid-column:2;color:var(--muted);font-size:11.5px}
+.chip{font-family:var(--f-mono);font-size:10px;font-weight:500;letter-spacing:.04em;padding:1px 6px;border-radius:4px;height:fit-content;white-space:nowrap}
+.chip.crit{background:var(--crit-soft);color:var(--crit)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.drift{background:var(--drift-soft);color:var(--drift)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.side{display:flex;flex-direction:column;gap:4px;min-width:0}
+.side h4{margin:0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.side pre{margin:0;background:var(--code);padding:7px;border-radius:5px;font-family:var(--f-mono);font-size:10.5px;white-space:pre-wrap;word-break:break-word}
+.side .src{font-size:11px;color:var(--muted)}
+.ev{font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.q{font-weight:600}
+.diff{font-family:var(--f-mono);font-size:10.5px;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.diff div{padding:3px 7px;white-space:pre-wrap;word-break:break-word}
+.diff .d{background:var(--del)} .diff .a{background:var(--add)} .diff .c{color:var(--muted)}
+.note{font-size:11.5px;color:var(--muted);border-left:3px solid var(--warn);padding-left:8px}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.tl li{display:grid;grid-template-columns:14px 1fr;gap:8px;align-items:start}
+.tl li i{width:10px;height:10px;border-radius:50%;margin-top:4px;background:var(--ok)}
+.tl li.pend i{background:transparent;border:2px solid var(--warn)}
+.tl small{display:block;color:var(--muted)}
+.branch{width:340px;border:1.5px dashed var(--muted);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted)}
+.branch b{color:var(--ink)}
+
+/* Needs table */
+.tbl-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:720px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--code)}
+tr:last-child td{border-bottom:0}
+td .mono{white-space:nowrap}
+footer{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.screen{transition:none}}
+
+/* Architecture */
+.pipe{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px;min-width:980px}
+.pipe-scroll{overflow-x:auto;padding-bottom:4px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px;position:relative;min-width:0}
+.stage:not(:last-child)::after{content:"";position:absolute;right:-9px;top:22px;width:8px;height:2px;background:var(--accent)}
+.stage .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.stage h3{font-size:15px}
+.stage p,.stage li{font-size:12.5px;color:var(--muted);line-height:1.45}
+.stage ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:3px}
+.stage code{font-size:11px;overflow-wrap:anywhere}
+.verdict{font-family:var(--f-mono);font-size:11px;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.v-real{background:var(--crit-soft);color:var(--crit)} .v-fp{background:var(--warn-soft);color:var(--warn)} .v-ok{background:var(--ok-soft);color:var(--ok)}
+.issues{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;max-width:90ch}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--surface);border:1px solid var(--ink);border-radius:10px;padding:16px 18px}
+.cta a{font-weight:600;color:var(--accent)}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>When the spec and the code disagree</h1>
+    <p class="lead prose">Storyboards, how drift detection works today, and the proposed drift-detection flow. Every example uses the demo workspace: the refund PRD still says <code>POST /v1/refunds</code> (synchronous), while payment-service now implements <code>POST /v2/refunds/async</code> (202 Accepted, Kafka event). Names, commits and counts on the screens are sample data.</p>
+    <div class="cta"><span><b>Try it:</b> the <a href="../frontend-demo/dist-single/index.html">Stavvros demo</a> runs this flow end to end on a mock backend built from the real engine output.</span></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--crit)"></i>Production failure</span>
+      <span><i class="sw" style="background:var(--drift)"></i>Drift warning</span>
+      <span><i class="sw" style="background:var(--ok)"></i>Resolved or safe</span>
+      <span><i class="sw" style="background:var(--accent)"></i>Hotspot (what the user clicks)</span>
+    </div>
+  </header>
+
+  <section id="storyboards">
+    <div class="sec-head">
+      <div class="eyebrow">Part 1</div>
+      <h2>Storyboards</h2>
+      <p class="prose">One persona and one path per board, in time order. The face on each character and the line under each board track how the persona feels at that step. Dashed boxes are messages from someone off-panel.</p>
+    </div>
+    <div id="boards" style="display:flex;flex-direction:column;gap:22px"></div>
+  </section>
+
+  <section id="today">
+    <div class="sec-head">
+      <div class="eyebrow">Part 2</div>
+      <h2>How drift detection works today</h2>
+      <p class="prose">What the current backend and dashboard do, traced through the code. We ran the engine on the demo workspace to get the numbers below.</p>
+    </div>
+    <div class="pipe-scroll"><div class="pipe">
+      <div class="stage"><span class="n">1 &#xb7; Input</span><h3>Workspace</h3><p><code>docs/*.md</code> (PRDs, architecture specs) and <code>services/*/*.py</code>. Path set by <code>STAVVROS_WORKSPACE_PATH</code>.</p></div>
+      <div class="stage"><span class="n">2 &#xb7; Parse</span><h3>Two parsers</h3><ul><li><code>code_parser.py</code> reads the Python AST: route decorators, status codes, Kafka topics, outgoing calls. Output: <code>CodeEndpoint</code>.</li><li><code>markdown_parser.py</code> reads FleetHD sections and API lines. Sync or async is guessed from nearby words. Output: <code>DocContract</code>.</li></ul></div>
+      <div class="stage"><span class="n">3 &#xb7; Compare</span><h3>Drift rules</h3><ul><li>001 Version: doc path missing, a similar route exists</li><li>002 Protocol: same path, doc sync, code async</li><li>003 Phantom: doc route with no code</li><li>004 Undocumented: code route with no doc</li><li>LLM evaluator: stub, not active</li></ul></div>
+      <div class="stage"><span class="n">4 &#xb7; Graph</span><h3>Knowledge graph</h3><p>NetworkX graph of teams, services, APIs and docs. A <code>drift_flagged</code> edge links the doc to the API.</p></div>
+      <div class="stage"><span class="n">5 &#xb7; Serve</span><h3>FastAPI</h3><ul><li><code>GET /api/graph</code>: nodes, edges, alerts, KPIs</li><li><code>GET /api/nodes/{id}</code>: alerts for one node</li><li><code>POST /api/drift/reconcile/{id}</code></li></ul></div>
+      <div class="stage"><span class="n">6 &#xb7; Show</span><h3>Dashboard</h3><ul><li>KPI tile: active drift count</li><li>Red dashed edge on the graph</li><li>Node Inspector &#x201c;Drift Diff&#x201d; tab, doc line vs code line</li><li>One-click Reconcile</li></ul></div>
+    </div></div>
+
+    <h3>What the engine finds in the demo workspace</h3>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Rule</th><th>Alert</th><th>Our read</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">001 &#xb7; critical</td><td>PRD-2025 says <code>POST /v1/refunds</code>; payment-service has <code>POST /v2/refunds/async</code></td><td><span class="verdict v-real">Real drift</span> The storyboard case.</td></tr>
+        <tr><td class="mono">001 &#xb7; critical</td><td>Architecture doc says <code>GET /v2/transactions/{id}</code>; code has <code>{transaction_id}</code></td><td><span class="verdict v-fp">False alarm</span> Only the parameter name differs.</td></tr>
+        <tr><td class="mono">003 &#xb7; warning</td><td>Same <code>/v2/transactions/{id}</code> line, reported as missing from code</td><td><span class="verdict v-fp">Duplicate</span> Same cause as the row above.</td></tr>
+        <tr><td class="mono">004 &#xb7; warning</td><td><code>GET /v2/transactions/{transaction_id}</code> has no doc</td><td><span class="verdict v-fp">Duplicate</span> It is documented, under the other name.</td></tr>
+        <tr><td class="mono">004 &#xb7; warning</td><td><code>POST /api/checkout/cart</code> has no doc</td><td><span class="verdict v-ok">Real gap</span> Low priority.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="prose">Two of the five alerts are useful. That noise is why the new inbox ranks alerts and lets a person dismiss one with a reason.</p>
+
+    <h3>How the current UI supports each need</h3>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>User need</th><th>Current dashboard</th><th>Gap</th><th>In the demo</th></tr></thead>
+      <tbody>
+        <tr><td>Find out at the moment of use</td><td>Only inside the dashboard</td><td>Nothing reaches the AI assistant</td><td>AI assistant view gets the warning in its answer</td></tr>
+        <tr><td>See what differs, with proof</td><td>Drift Diff tab shows the doc line and code line as text</td><td>Lines only, no surrounding context, doc line off by one</td><td>Side-by-side excerpts with line numbers, commit, callers</td></tr>
+        <tr><td>Know who owns the fix</td><td>Owning team shown on the doc</td><td>No link from the drift to a person</td><td>Doc owner and code owner on every drift</td></tr>
+        <tr><td>Decide intended or regression</td><td>One-click Reconcile</td><td>Does not record which side is right; the alert returns on the next scan</td><td>Three choices: code correct, doc correct, not drift</td></tr>
+        <tr><td>Fix the doc in minutes</td><td>A suggested patch sentence</td><td>No drafted text, no reviewer</td><td>Drafted diff, editable, sent to the doc owner</td></tr>
+        <tr><td>Only see alerts that matter</td><td>KPI count; clicking opens the first alert only</td><td>No list, no ranking, no dismiss</td><td>Inbox ranked by severity and AI usage, with filters</td></tr>
+        <tr><td>Keep AI correct while pending</td><td>None</td><td>None</td><td>Status shows what assistants are told at each stage</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Engine issues found while building the demo</h3>
+    <ol class="issues">
+      <li><b>Doc line numbers are one too low.</b> <code>markdown_parser.py</code> stores a 0-based index, so alerts say line 55 for line 56.</li>
+      <li><b>Nodes never show drift.</b> <code>graph_builder.py</code> writes <code>status</code> beside the node data instead of inside it, so every node comes back <code>active</code> and the red node borders never appear.</li>
+      <li><b>Only the refund drift gets a graph edge.</b> Drift edges need the contract's domain tag in the code path; the transactions route is tagged <code>order</code>, so its alerts are invisible on the graph.</li>
+      <li><b>Renamed path parameters cause three alerts.</b> Normalising <code>{id}</code> and <code>{transaction_id}</code> before comparing would remove three of the five alerts above.</li>
+      <li><b>Reconcile does not stick.</b> The next re-scan rebuilds alerts from scratch, so a reconciled drift comes back unless the doc changed.</li>
+    </ol>
+  </section>
+
+  <section id="wireflow">
+    <div class="sec-head">
+      <div class="eyebrow">Part 3</div>
+      <h2>Wireflow: drift detection proof of concept</h2>
+      <p class="prose">Two ways in, one shared drift view. Maya meets the drift inside her AI assistant; Alex meets it in his drift inbox. Both land on the same screen, where a person decides which side is correct. Dashed outlines are hotspots: click one to jump to the screen it leads to.</p>
+    </div>
+    <div class="flow-scroll" id="flowbox">
+      <div class="flow">
+        <div class="col">
+          <div>
+            <div class="entry">Entry A &#xb7; Maya, while coding</div>
+            <div class="screen" id="s1">
+              <div class="chrome"><span class="dots"><i></i><i></i><i></i></span>AI assistant &#xb7; checkout-service<span class="sid">S1</span></div>
+              <div class="body">
+                <div class="msg-user">Add a refund button to the order history page.</div>
+                <div class="msg-ai">Checked Stavvros for how refunds work in payment-service before writing code.</div>
+                <div class="card drift">
+                  <div class="t">Spec is out of date</div>
+                  <div><b>PRD-2025 Refund Policy &#xa7;5</b> says <code>POST /v1/refunds</code>, synchronous, 200 OK.</div>
+                  <div><b>payment-service</b> implements <code>POST /v2/refunds/async</code>, 202 Accepted, emits <code>payment.refund.initiated</code>.</div>
+                  <div>I'll build against the code version.</div>
+                  <div class="btns">
+                    <button class="btn hot" data-go="s3" type="button">Open drift details<span class="mk">1</span></button>
+                    <button class="btn ghost" type="button">Continue</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="entry">Entry B &#xb7; Alex, weekly triage</div>
+            <div class="screen" id="s2">
+              <div class="chrome"><span class="dots"><i></i><i></i><i></i></span>Stavvros &#xb7; Drift inbox<span class="sid">S2</span></div>
+              <div class="body">
+                <div class="tabs"><span class="on">Services my team calls (3)</span><span>All (3)</span></div>
+                <div class="row hot" data-go="s3" tabindex="0" role="button">
+                  <span class="chip crit">CRITICAL</span><span><b>Endpoint changed</b> &#xb7; PRD-2025 &#x2194; payment-service</span>
+                  <span class="meta">Since Sep 12 &#xb7; used in 14 AI answers this week</span><span class="mk">2</span>
+                </div>
+                <div class="row">
+                  <span class="chip warn">WARNING</span><span><b>Undocumented route</b> &#xb7; <code>POST /v2/charges</code></span>
+                  <span class="meta">No PRD or doc mentions this route</span>
+                </div>
+                <div class="row">
+                  <span class="chip warn">WARNING</span><span><b>Undocumented route</b> &#xb7; <code>GET /v2/transactions/{id}</code></span>
+                  <span class="meta">No PRD or doc mentions this route</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow"><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10 H90" stroke="var(--accent)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/><path d="M86 4 L98 10 L86 16 Z" fill="var(--accent)"/></svg><div class="lbl"><span class="n">1</span>Open drift details<br><span class="n">2</span>Click the alert</div></div>
+
+        <div class="col">
+          <div class="screen" id="s3">
+            <div class="chrome"><span class="dots"><i></i><i></i><i></i></span>Stavvros &#xb7; Drift detail<span class="sid">S3</span></div>
+            <div class="body">
+              <div style="display:flex;gap:8px;align-items:center"><span class="chip crit">CRITICAL</span><b>Endpoint changed</b></div>
+              <div class="vs">
+                <div class="side"><h4>Document says</h4>
+<pre>POST /v1/refunds
+Synchronous, 200 OK
+status: COMPLETED</pre>
+                  <span class="src">PRD-2025-Refund-Policy.md, lines 56&#x2013;71 &#xb7; owner David (Checkout)</span></div>
+                <div class="side"><h4>Code does</h4>
+<pre>POST /v2/refunds/async
+202 Accepted
+emits payment.refund.initiated</pre>
+                  <span class="src">payment-service/main.py, line 31 &#xb7; owner Payments Platform</span></div>
+              </div>
+              <div class="ev">
+                <span>Diverged in commit <code>a91f3c</code> &#x201c;Migrate refunds to async v2&#x201d;, Sep 12</span>
+                <span>checkout-service calls this endpoint (client.py, line 66)</span>
+              </div>
+              <div class="q">Which version is correct?</div>
+              <div class="btns">
+                <button class="btn primary hot" data-go="s4" type="button">Code is correct: update the doc<span class="mk">3</span></button>
+                <button class="btn" type="button">Doc is correct: flag the code</button>
+                <button class="btn ghost" type="button">Not drift: dismiss with reason</button>
+              </div>
+            </div>
+          </div>
+          <div class="branch"><b>Branch not drawn: &#x201c;Doc is correct.&#x201d;</b> Stavvros opens an issue for Payments Platform with the doc excerpt and the commit, and AI assistants are told the code may be wrong until it is fixed.</div>
+        </div>
+
+        <div class="arrow"><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10 H90" stroke="var(--accent)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/><path d="M86 4 L98 10 L86 16 Z" fill="var(--accent)"/></svg><div class="lbl"><span class="n">3</span>Code is correct</div></div>
+
+        <div class="screen" id="s4">
+          <div class="chrome"><span class="dots"><i></i><i></i><i></i></span>Stavvros &#xb7; Suggested doc fix<span class="sid">S4</span></div>
+          <div class="body">
+            <b>Update PRD-2025 Refund Policy &#xa7;5</b>
+            <div class="diff">
+              <div class="d">- Endpoint: /v1/refunds</div>
+              <div class="a">+ Endpoint: /v2/refunds/async</div>
+              <div class="d">- Protocol: Synchronous REST HTTP 200 OK</div>
+              <div class="a">+ Protocol: Asynchronous. HTTP 202 Accepted; result arrives on payment.refund.initiated</div>
+              <div class="d">- Response: refund_id, status COMPLETED</div>
+              <div class="a">+ Response: refund_id, status ACCEPTED_FOR_PROCESSING</div>
+            </div>
+            <div class="note">Also check &#xa7;4: &#x201c;P99 response time under 250ms&#x201d; was written for a synchronous refund.</div>
+            <div class="ev"><span>Reviewer: <b style="color:var(--ink)">David</b>, doc owner (auto-assigned)</span><span>Reason: intentional change by Payments in a91f3c</span></div>
+            <div class="btns">
+              <button class="btn primary hot" data-go="s5" type="button">Send to David for review<span class="mk">4</span></button>
+              <button class="btn ghost" type="button">Edit text</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow"><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10 H90" stroke="var(--accent)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/><path d="M86 4 L98 10 L86 16 Z" fill="var(--accent)"/></svg><div class="lbl"><span class="n">4</span>Send to David</div></div>
+
+        <div class="screen" id="s5">
+          <div class="chrome"><span class="dots"><i></i><i></i><i></i></span>Stavvros &#xb7; Drift status<span class="sid">S5</span></div>
+          <div class="body">
+            <div style="display:flex;gap:8px;align-items:center"><span class="chip drift">FIX IN REVIEW</span><b>Endpoint changed</b></div>
+            <ul class="tl">
+              <li><i></i><span>Detected<small>Sep 12, from commit a91f3c</small></span></li>
+              <li><i></i><span>Triaged by Alex: intentional change<small>Today, 9:14</small></span></li>
+              <li><i></i><span>Doc fix sent to David<small>Today, 9:16</small></span></li>
+              <li class="pend"><i></i><span>Merged<small>Waiting on David</small></span></li>
+            </ul>
+            <div class="card ok">Until the fix merges, AI assistants asking about refunds get the code version plus a note that PRD-2025 &#xa7;5 is being updated.</div>
+            <div class="btns"><button class="btn hot" data-go="s2" type="button">Back to inbox<span class="mk">5</span></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="needs">
+    <div class="sec-head">
+      <div class="eyebrow">Part 4</div>
+      <h2>What the flow is meant to test</h2>
+      <p class="prose">Each drift need from the interviews maps to a screen, so a five-person walkthrough can check them one at a time.</p>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>User need</th><th>Screen</th><th>Question to ask in testing</th></tr></thead>
+        <tbody>
+          <tr><td>Find out a doc is stale before relying on it, where the work happens</td><td class="mono">S1</td><td>Did you notice the warning? Would you have trusted the PRD without it?</td></tr>
+          <tr><td>See exactly what differs, with proof from both sides</td><td class="mono">S3</td><td>Can you explain the difference in your own words in under 30 seconds?</td></tr>
+          <tr><td>Know who owns the fix</td><td class="mono">S3, S4</td><td>Who would you contact about this, and is that the right person?</td></tr>
+          <tr><td>Decide whether the change was intended or a regression</td><td class="mono">S3</td><td>Is this your decision to make? What else would you need to know first?</td></tr>
+          <tr><td>Fix the doc in minutes, not a meeting</td><td class="mono">S4</td><td>Would you send this fix as-is, edit it, or ignore it?</td></tr>
+          <tr><td>Only see alerts that matter to me</td><td class="mono">S2</td><td>Which of these alerts would you act on this week? Which are noise?</td></tr>
+          <tr><td>Keep AI assistants correct while the fix is pending</td><td class="mono">S5</td><td>Is it acceptable for the AI to follow the code before the doc is updated?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Sources for method: Nielsen Norman Group on storyboards, personas, wireflows, and research for products that do not exist yet.</footer>
+</div>
+
+<script>
+const MOODV={frustrated:-2,worried:-1.5,rushed:-0.5,neutral:0,thinking:0.2,surprised:0.4,reassured:1.2,confident:1.4,relieved:1.4,happy:2};
+const MOODC=v=>v<=-1?'var(--crit)':v<0.5?'var(--warn)':'var(--ok)';
+const BOARDS=[
+ {title:"Today: the stale spec",persona:"Maya \u00b7 feature developer",
+  scenario:"Maya asks her AI assistant to add a refund button to checkout. The refund PRD still describes the payments API from last year, and nothing tells her or the assistant that it is wrong.",
+  panels:[
+   {screen:{tone:'neutral',title:'AI assistant',lines:['> add a refund button','  to checkout','','working...']},mood:'confident',cap:"Maya hands the refund ticket to her AI assistant."},
+   {screen:{tone:'neutral',title:'PRD-2025 \u00a75',lines:['POST /v1/refunds','sync \u00b7 200 OK','status: COMPLETED']},bubble:{who:'screen',text:'AI: Found the refund spec. Using POST /v1/refunds.'},mood:'neutral',cap:"The assistant finds last year's PRD and trusts it. It cannot see payment-service."},
+   {screen:{tone:'ok',title:'Pull request #412',lines:['checks passed','+84  -3','checkout/refund.py']},bubble:{who:'off',text:'Alex: Looks fine, ship it.'},mood:'confident',cap:"The PR looks plausible. Alex skims it between meetings."},
+   {screen:{tone:'alert',title:'PROD ALERT',lines:['404 POST /v1/refunds','refunds failing','37 customers']},prop:'alarm',mood:'worried',cap:"In production, refunds fail. The endpoint moved to /v2/refunds/async months ago."},
+   {screen:{tone:'neutral',title:'#payments-core',lines:['maya: who owns the','refund API now?','','(no reply yet)']},prop:'clock',mood:'frustrated',cap:"Maya waits half a day for the payments team to explain the change."}
+  ]},
+ {title:"With drift detection: warned at the point of use",persona:"Maya \u00b7 feature developer",
+  scenario:"Same ticket, same prompt. This time the assistant asks Stavvros how refunds work, and the answer comes with a drift warning.",
+  panels:[
+   {screen:{tone:'neutral',title:'AI assistant',lines:['> add a refund button','  to checkout','','asking Stavvros...']},mood:'confident',cap:"Maya gives the assistant the same ticket."},
+   {screen:{tone:'warn',title:'SPEC OUT OF DATE',lines:['doc:  /v1/refunds sync','code: /v2/refunds/async','      202 + event']},bubble:{who:'screen',text:'AI: The refund PRD does not match the code. I will follow the code.'},mood:'surprised',cap:"Before writing code, the assistant gets the drift warning with both versions."},
+   {screen:{tone:'warn',title:'Drift detail',lines:['DOC      | CODE','/v1 sync | /v2 async','owner: Payments','commit a91f3c']},mood:'reassured',cap:"Maya opens the drift: both versions, the commit that changed it, and who owns it."},
+   {screen:{tone:'info',title:'refund.py',lines:['post /v2/refunds/async','expect 202','listen: refund.initiated']},mood:'confident',cap:"The assistant builds against the async API on the first try."},
+   {screen:{tone:'ok',title:'Pull request #412',lines:['built against code','PRD-2025 flagged','checks passed']},bubble:{who:'off',text:'Alex: Good catch. Approved.'},mood:'happy',cap:"Review is quick because the PR cites the drift. No outage, fewer prompts."}
+  ]},
+ {title:"Resolving the drift",persona:"Alex \u00b7 tech lead",
+  scenario:"Alex's team calls payment-service. Stavvros has flagged that the refund PRD and the code disagree. Alex decides which one is right and gets the doc fixed without a meeting.",
+  panels:[
+   {screen:{tone:'warn',title:'Monday digest',lines:['1 critical drift','payment-service','used in 14 AI answers']},mood:'neutral',cap:"Monday digest: one critical drift in a service his team depends on."},
+   {screen:{tone:'warn',title:'Drift detail',lines:['diverged Sep 12','commit a91f3c','"migrate refunds','to async v2"']},mood:'thinking',cap:"He sees what differs, when it diverged, and which commit caused it."},
+   {screen:{tone:'neutral',title:'Which is correct?',lines:['[ Code is correct ]','[ Doc is correct ]','[ Not drift ]']},bubble:{who:'person',text:'Alex: Intentional change. The doc is behind.'},mood:'confident',cap:"He decides which side is true. The tool shows evidence; the call is his."},
+   {screen:{tone:'info',title:'Suggested doc fix',lines:['- /v1/refunds','+ /v2/refunds/async','reviewer: David']},mood:'relieved',cap:"Stavvros drafts the PRD fix and routes it to David, the doc owner."},
+   {screen:{tone:'ok',title:'Drift resolved',lines:['PRD-2025 updated','graph edge: green','AI answers current']},bubble:{who:'off',text:'David: Approved.'},mood:'happy',cap:"David approves in two minutes. Assistants now get the corrected spec."}
+  ]}
+];
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function wrap(t,n){const w=t.split(' ');const out=[];let cur='';for(const x of w){if((cur+' '+x).trim().length>n){out.push(cur.trim());cur=x}else cur+=' '+x}if(cur.trim())out.push(cur.trim());return out}
+function face(m){
+  const eyes='<circle cx="43" cy="105" r="1.6" class="s-fillink"/><circle cx="53" cy="105" r="1.6" class="s-fillink"/>';
+  const M={
+   happy:'M42 112 Q48 119 54 112', confident:'M43 112 Q48 116 53 112', relieved:'M43 112 Q48 116 53 112', reassured:'M43 112 Q48 115 53 112',
+   neutral:'M43 113 L53 113', thinking:'M44 114 L52 112', rushed:'M43 113 Q46 111 48 113 Q51 115 53 113',
+   worried:'M42 116 Q48 110 54 116', frustrated:'M42 116 Q48 109 54 116'};
+  let brows='';
+  if(m==='worried')brows='<path class="s-ink" style="stroke-width:1.5" d="M40 100 L45 98 M51 98 L56 100"/>';
+  if(m==='frustrated')brows='<path class="s-ink" style="stroke-width:1.5" d="M40 98 L46 101 M50 101 L56 98"/>';
+  if(m==='thinking')brows='<path class="s-ink" style="stroke-width:1.5" d="M51 98 L56 97"/>';
+  const mouth=m==='surprised'?'<ellipse cx="48" cy="113" rx="2.6" ry="3.2" class="s-ink" style="stroke-width:1.6"/>':`<path class="s-ink" style="stroke-width:1.7" d="${M[m]||M.neutral}"/>`;
+  return eyes+brows+mouth;
+}
+function panelSVG(p,i,bi){
+  const tone={neutral:'t-neutral',alert:'t-alert',warn:'t-warn',ok:'t-ok',info:'t-info'}[p.screen.tone];
+  let s=`<svg viewBox="0 0 260 190" role="img" aria-label="${esc(p.cap)}">`;
+  s+=`<rect x="1" y="1" width="258" height="188" rx="6" class="s-frame"/>`;
+  s+=`<g filter="url(#rough)">`;
+  // desk, chair
+  s+=`<path class="s-ink" d="M10 160 H250"/><path class="s-ink" style="stroke-width:1.6" d="M22 132 L22 176 M22 150 H40 M30 150 L30 176"/>`;
+  // body
+  s+=`<path class="s-ink" d="M48 122 L46 150 M47 132 Q66 136 92 146"/>`;
+  // monitor
+  s+=`<rect x="100" y="56" width="150" height="96" rx="4" class="s-monitor"/><path class="s-ink" style="stroke-width:1.8" d="M175 152 L175 160 M160 160 H190"/>`;
+  s+=`</g>`;
+  s+=`<circle cx="48" cy="108" r="13" class="s-head"/>`+face(p.mood);
+  s+=`<rect x="102" y="58" width="146" height="14" rx="2" class="${tone}"/><text x="107" y="68" class="s-title">${esc(p.screen.title)}</text>`;
+  p.screen.lines.forEach((l,k)=>{s+=`<text x="107" y="${86+k*13}" class="s-text" xml:space="preserve">${esc(l)}</text>`});
+  if(p.bubble){
+    const lines=wrap(p.bubble.text,30).slice(0,3);const h=10+lines.length*13;
+    const tail=p.bubble.who==='person'?`M30 ${4+h} L44 ${4+h} L44 ${Math.min(93,h+20)}`:`M150 ${4+h} L166 ${4+h} L176 ${Math.min(55,h+16)}`;
+    s+=`<rect x="6" y="4" width="186" height="${h}" rx="${p.bubble.who==='off'?3:10}" class="s-bubble" ${p.bubble.who==='off'?'style="stroke-dasharray:4 3"':''}/>`;
+    if(p.bubble.who!=='off')s+=`<path d="${tail}" class="s-bubble" style="stroke-linejoin:round"/><rect x="${p.bubble.who==='person'?31:151}" y="${h}" width="${p.bubble.who==='person'?12:14}" height="6" style="fill:var(--surface)"/>`;
+    lines.forEach((l,k)=>{s+=`<text x="14" y="${18+k*13}" class="s-btext">${esc(l)}</text>`});
+  }
+  if(p.prop==='alarm'){s+=`<g transform="translate(222,14)"><path d="M14 2 L27 26 L1 26 Z" class="t-alert"/><text x="14" y="23" text-anchor="middle" style="fill:#fff;font:700 15px var(--f-body)">!</text></g>`}
+  if(p.prop==='clock'){s+=`<g transform="translate(236,30)"><circle r="14" class="s-bubble"/><path class="s-ink" style="stroke-width:1.8" d="M0 -8 L0 0 L6 4"/></g><text x="236" y="54" text-anchor="middle" class="s-btext">3 hours</text>`}
+  s+=`<text x="250" y="182" text-anchor="end" style="fill:var(--muted);font:600 10px var(--f-mono)">${bi+1}.${i+1}</text>`;
+  return s+`</svg>`;
+}
+const host=document.getElementById('boards');
+host.insertAdjacentHTML('beforeend',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg>`);
+BOARDS.forEach((b,bi)=>{
+  const pts=b.panels.map((p,i)=>`${i*100+50},${24-MOODV[p.mood]*9}`).join(' ');
+  const html=`<article class="board" id="board-${bi+1}">
+    <div class="board-head"><h3>Storyboard ${bi+1}: ${esc(b.title)}</h3><span class="persona">${esc(b.persona)}</span></div>
+    <p class="scenario">${esc(b.scenario)}</p>
+    <div class="strip-scroll"><div class="strip">${b.panels.map((p,i)=>`<div class="frame">${panelSVG(p,i,bi)}<div class="cap">${esc(p.cap)}</div><div class="mood"><i style="background:${MOODC(MOODV[p.mood])}"></i>${p.mood}</div></div>`).join('')}</div>
+    <div class="curve-wrap"><span class="curve-label">feeling</span><svg class="curve" viewBox="0 0 500 48" preserveAspectRatio="none" aria-hidden="true"><path d="M0 24 H500" stroke="var(--line)" stroke-dasharray="3 4" vector-effect="non-scaling-stroke" fill="none"/><polyline points="${pts}" fill="none" stroke="var(--ink)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg></div></div>
+  </article>`;
+  host.insertAdjacentHTML('beforeend',html);
+});
+document.querySelectorAll('.hot').forEach(h=>{
+  const go=()=>{const t=document.getElementById(h.dataset.go);if(!t)return;
+    t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'center'});
+    t.classList.add('flash');setTimeout(()=>t.classList.remove('flash'),1200)};
+  h.addEventListener('click',go);h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
+});
+</script>
+
+</body>
+</html>
