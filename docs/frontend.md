@@ -19,6 +19,18 @@ React 18 + TypeScript + Vite 5 + Tailwind 3 + Cytoscape 3 + lucide-react. Dev se
 | `tailwind.config.js` | Dark theme. Colour tokens (RGB channels live as CSS variables in `index.css`; `onink` = text on an `ink` fill): `ink`, `muted`, `line`, `canvas`, `panel`, `sunken`, `accent`, `drift`, `crit`, `warn`, `ok`. Fonts: Bricolage Grotesque (display), IBM Plex Sans, IBM Plex Mono (Google Fonts, system fallbacks) |
 | `src/index.css` | `btn`, `btn-primary`, `btn-ghost`, `chip`, `eyebrow`, `card`, `codebox` component classes |
 
+## Layout modes
+
+A List | Split | Focus switch in the top bar (Drift view only; saved in localStorage as `drift-mode`).
+
+| Mode | Layout |
+| --- | --- |
+| List | Full-width table (`DriftList dense`): severity bar, title, service, doc, state. Clicking a row opens Focus, like a GitHub issue |
+| Split | 360px list beside the detail (the original layout) |
+| Focus | Detail only, with "← All drifts" (or `Esc`), `n of m`, and prev/next (`k` / `j`). Prev/next follow `visibleDrifts()` order |
+
+The tabs (To decide / In progress / Closed / Matches) apply in every mode. The mode only changes layout.
+
 ## Information hierarchy
 
 User research said the earlier UI had too much text for a quick look. Each level answers one question; deeper levels are opt-in.

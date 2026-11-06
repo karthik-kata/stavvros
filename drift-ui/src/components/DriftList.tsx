@@ -7,8 +7,15 @@ export type ListTab = 'decide' | 'progress' | 'closed' | 'matches';
 
 const SEVERITIES: Severity[] = ['critical', 'high', 'medium', 'low'];
 
+/** Drifts shown under a tab, in on-screen order (by severity). Used for prev/next in focus mode. */
+export function visibleDrifts(items: DriftListItem[], tab: ListTab): DriftListItem[] {
+  if (tab === 'matches') return [];
+  const inTab = items.filter((i) => (tab === 'decide' ? i.state === 'open' : tab === 'progress' ? i.state !== 'open' && isActive(i.state) : !isActive(i.state)));
+  return SEVERITIES.flatMap((sev) => inTab.filter((i) => i.severity === sev));
+}
+
 export function DriftList({
-  items, selectedId, onSelect, tab, onTab, verifiedCount,
+  items, selectedId, onSelect, tab, onTab, verifiedCount, dense = false,
 }: {
   items: DriftListItem[];
   selectedId: string | null;
@@ -16,6 +23,8 @@ export function DriftList({
   tab: ListTab;
   onTab: (t: ListTab) => void;
   verifiedCount: number;
+  /** List mode: full-width table rows instead of the narrow sidebar rows. */
+  dense?: boolean;
 }) {
   const groups = useMemo(() => ({
     decide: items.filter((i) => i.state === 'open'),
@@ -33,7 +42,7 @@ export function DriftList({
   const critical = groups.decide.filter((i) => i.severity === 'critical').length;
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-r border-line bg-panel">
+    <div className={`flex min-h-0 flex-col bg-panel ${dense ? '' : 'h-full border-r border-line'}`}>
       {/* Level 0 summary: one sentence */}
       <div className="px-5 pb-3 pt-5">
         <h1 className="font-display text-[22px] font-semibold leading-tight">
@@ -53,7 +62,7 @@ export function DriftList({
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-4">
+      <div className={dense ? 'pb-4' : 'flex-1 overflow-y-auto pb-4'}>
         {tab !== 'matches' && shown.length === 0 && (
           <div className="flex flex-col items-center gap-2 px-6 py-16 text-center text-muted">
             <Check size={20} className="text-ok" />
@@ -71,6 +80,19 @@ export function DriftList({
               <ul>
                 {rows.map((i) => (
                   <li key={i.id}>
+                    {dense ? (
+                      <button
+                        onClick={() => onSelect(i.id)}
+                        aria-current={i.id === selectedId}
+                        className={`relative grid w-full grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.2fr)_130px] items-center gap-4 py-2 pl-6 pr-5 text-left transition hover:bg-sunken/70 ${i.id === selectedId ? 'bg-accent-soft' : ''}`}
+                      >
+                        <span className={`absolute bottom-1.5 left-2.5 top-1.5 w-[3px] rounded-full ${SEV_BAR[i.severity]}`} />
+                        <span className="truncate font-medium">{i.title}</span>
+                        <span className="truncate text-[12.5px] text-muted">{i.service}</span>
+                        <span className="truncate text-[12.5px] text-muted">{i.doc_title ?? ''}</span>
+                        <span className="truncate text-right text-[12px] text-muted">{STATE_LABEL[i.state]}</span>
+                      </button>
+                    ) : (
                     <button
                       onClick={() => onSelect(i.id)}
                       aria-current={i.id === selectedId}
@@ -82,6 +104,7 @@ export function DriftList({
                         {i.service}{i.doc_title ? ` · ${i.doc_title}` : ''}{tab !== 'decide' ? ` · ${STATE_LABEL[i.state]}` : ''}
                       </span>
                     </button>
+                    )}
                   </li>
                 ))}
               </ul>
