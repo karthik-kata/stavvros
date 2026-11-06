@@ -51,7 +51,7 @@ export function DriftList({
   const critical = groups.decide.filter((i) => i.severity === 'critical').length;
 
   return (
-    <div className={`flex min-h-full flex-col bg-panel`}>
+    <div ref={root} className="flex min-h-full flex-col bg-panel">
       {/* Level 0 summary: one sentence */}
       <div className="px-5 pb-3 pt-5">
         <h1 className="font-display text-[22px] font-semibold leading-tight">
